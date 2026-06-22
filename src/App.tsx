@@ -268,6 +268,19 @@ export default function App() {
           />
           <WelcomeHeader userName="Alex" itemCount={activeItems.length} />
           
+          {!isPremium && (
+            <div className="mx-4 mb-3 rounded-md bg-amber-50 border border-amber-100 p-2.5 text-center text-xs text-amber-800 font-semibold flex items-center justify-center gap-1.5 shadow-sm">
+              <span className="text-sm">⚡</span>
+              <span>Free Tier Capacity: <strong>{activeItems.length}/20 items</strong> used.</span>
+              <button 
+                onClick={() => { setActiveScreen('settings'); }} 
+                className="underline text-amber-900 hover:text-amber-950 font-bold ml-1"
+              >
+                Upgrade to Premium
+              </button>
+            </div>
+          )}
+          
           <div className="px-4 pb-4">
             <DashboardStats 
               totalItems={activeItems.length}
