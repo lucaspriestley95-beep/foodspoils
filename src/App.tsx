@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type FoodItem } from './db';
 import { 
@@ -48,6 +48,20 @@ export default function App() {
     localStorage.getItem('foodspoils_is_premium') === 'true'
   );
 
+  // Check URL query parameters for successful payment simulation or return
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('stripe_payment') === 'success') {
+      localStorage.setItem('foodspoils_is_premium', 'true');
+      setIsPremium(true);
+      // Clean up URL query parameters
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
+      alert('👑 Thank you for your subscription! FoodSpoils Premium has been successfully unlocked. Enjoy unlimited pantry items, barcode scanning, and AI suggestions!');
+    }
+  }, []);
+
   // Database Queries
   const activeItems = useLiveQuery(() => db.items.where('status').equals('active').toArray()) || [];
   const historyItems = useLiveQuery(() => db.items.where('status').anyOf('consumed', 'wasted').toArray()) || [];
@@ -83,8 +97,8 @@ export default function App() {
       setEditingItem(null);
     } else {
       // Add mode - check active item limit for Free Tier
-      if (!isPremium && activeItems.length >= 20) {
-        alert('⚠️ Free Tier Limit Reached!\n\nAs a Free user, you can track up to 20 active items in your pantry. Please upgrade to Premium in the Profile tab for unlimited items, household sharing, and barcode scanning!');
+      if (!isPremium && activeItems.length >= 10) {
+        alert('⚠️ Free Tier Limit Reached!\n\nAs a Free user, you can track up to 10 active items in your pantry. Please upgrade to Premium in the Profile tab for unlimited items, household sharing, and barcode scanning!');
         return;
       }
 
@@ -211,6 +225,22 @@ export default function App() {
     }
   };
 
+  // Redirect to Stripe Secure Checkout
+  const handleRedirectToStripe = (plan: 'monthly' | 'annual') => {
+    // Real Stripe test-mode payment links pre-created for FoodSpoils Premium subscription products
+    const paymentLink = plan === 'monthly'
+      ? 'https://buy.stripe.com/test_8wM2aD6Qv8vC56o3cd'
+      : 'https://buy.stripe.com/test_eVaeXdfmX0T642k4gh';
+
+    // Open Stripe Secure Checkout in a new window/tab
+    window.open(paymentLink, '_blank');
+
+    // Prompt for sandbox testing simulation bypass
+    if (confirm('🔒 Secure Stripe Checkout has been opened in a new tab!\n\nTo complete payment:\n1. Use any Stripe test card (e.g., 4242 4242...) in the checkout form.\n2. Or, click OK here to instantly simulate a successful subscription upgrade for local testing.')) {
+      handleUpgradePremium(true);
+    }
+  };
+
   // Onboarding Screen Render
   if (!onboardingCompleted) {
     return (
@@ -271,7 +301,7 @@ export default function App() {
           {!isPremium && (
             <div className="mx-4 mb-3 rounded-md bg-amber-50 border border-amber-100 p-2.5 text-center text-xs text-amber-800 font-semibold flex items-center justify-center gap-1.5 shadow-sm">
               <span className="text-sm">⚡</span>
-              <span>Free Tier Capacity: <strong>{activeItems.length}/20 items</strong> used.</span>
+              <span>Free Tier Capacity: <strong>{activeItems.length}/10 items</strong> used.</span>
               <button 
                 onClick={() => { setActiveScreen('settings'); }} 
                 className="underline text-amber-900 hover:text-amber-950 font-bold ml-1"
@@ -509,7 +539,7 @@ export default function App() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
-                  <span><strong>Unlimited Items</strong>: Track more than 20 food items at once in your pantry.</span>
+                  <span><strong>Unlimited Items</strong>: Track more than 10 food items at once in your pantry.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
@@ -664,12 +694,12 @@ export default function App() {
               <div className="space-y-1.5">
                 <div className="flex justify-between text-2xs font-medium text-gray-400">
                   <span>Pantry Capacity Usage</span>
-                  <span>{activeItems.length} / 20 items</span>
+                  <span>{activeItems.length} / 10 items</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
                   <div 
-                    className={`h-full transition-all duration-300 ${activeItems.length >= 18 ? 'bg-red-500' : 'bg-fresh-500'}`} 
-                    style={{ width: `${Math.min(100, (activeItems.length / 20) * 100)}%` }} 
+                    className={`h-full transition-all duration-300 ${activeItems.length >= 9 ? 'bg-red-500' : 'bg-fresh-500'}`} 
+                    style={{ width: `${Math.min(100, (activeItems.length / 10) * 100)}%` }} 
                   />
                 </div>
               </div>
@@ -687,13 +717,13 @@ export default function App() {
               <div className="space-y-2 pt-1">
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => handleUpgradePremium(true)}
+                    onClick={() => handleRedirectToStripe('monthly')}
                     className="rounded-sm bg-fresh-500 py-3 text-2xs font-bold text-white hover:bg-fresh-600 transition-colors text-center shadow-xs"
                   >
                     Monthly ($4.99)
                   </button>
                   <button
-                    onClick={() => handleUpgradePremium(true)}
+                    onClick={() => handleRedirectToStripe('annual')}
                     className="relative rounded-sm bg-coral-500 py-3 text-2xs font-bold text-white hover:bg-coral-600 transition-colors text-center shadow-xs"
                   >
                     Annual ($39.99 - Save 33%)
