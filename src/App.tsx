@@ -2,149 +2,243 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type FoodItem } from './db';
 import { 
-  Plus, 
-  Trash2, 
-  Check, 
-  X, 
-  Clock, 
-  ShieldCheck, 
-  Calendar, 
-  ChevronDown, 
-  ChevronUp, 
-  Search, 
-  RotateCcw,
-  Sparkles,
-  TrendingDown,
-  History,
-  LayoutDashboard,
-  Apple
-} from 'lucide-react';
+  getExpiryStatus, 
+  FoodItemCard,
+  AddItemForm,
+  EmptyPantry,
+  NoExpiringItems,
+  ScanPrompt,
+  DashboardStats,
+  BottomNav,
+  Header,
+  WelcomeHeader,
+  OnboardingScreen,
+  type ScreenKey
+} from './components';
 
-// Common categories and their emojis / styles
-const CATEGORY_MAP: Record<string, { emoji: string; color: string; bg: string }> = {
-  'Produce': { emoji: '🥦', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  'Dairy': { emoji: '🧀', color: 'text-amber-600', bg: 'bg-amber-50' },
-  'Meat & Seafood': { emoji: '🥩', color: 'text-rose-600', bg: 'bg-rose-50' },
-  'Pantry': { emoji: '🥫', color: 'text-blue-600', bg: 'bg-blue-50' },
-  'Bakery': { emoji: '🍞', color: 'text-yellow-700', bg: 'bg-yellow-50' },
-  'Beverages': { emoji: '🥛', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-  'Freezer': { emoji: '❄️', color: 'text-sky-500', bg: 'bg-sky-50' },
-  'Others': { emoji: '🏷️', color: 'text-slate-600', bg: 'bg-slate-50' },
-};
-
-const CATEGORIES = Object.keys(CATEGORY_MAP);
-
-const UNITS = ['pcs', 'bags', 'g', 'kg', 'ml', 'L', 'oz', 'lbs', 'packs'];
+const CATEGORIES_INFO = [
+  { value: 'dairy', label: 'Dairy', icon: '🥛', color: 'text-amber-600', bg: 'bg-amber-50' },
+  { value: 'produce', label: 'Produce', icon: '🥬', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { value: 'meat', label: 'Meat', icon: '🥩', color: 'text-rose-600', bg: 'bg-rose-50' },
+  { value: 'seafood', label: 'Seafood', icon: '🐟', color: 'text-cyan-600', bg: 'bg-cyan-50' },
+  { value: 'grains', label: 'Grains & Pasta', icon: '🌾', color: 'text-yellow-700', bg: 'bg-yellow-50' },
+  { value: 'condiments', label: 'Condiments', icon: '🧂', color: 'text-slate-600', bg: 'bg-slate-50' },
+  { value: 'beverages', label: 'Beverages', icon: '🥤', color: 'text-blue-600', bg: 'bg-blue-50' },
+  { value: 'frozen', label: 'Frozen', icon: '🧊', color: 'text-sky-500', bg: 'bg-sky-50' },
+  { value: 'snacks', label: 'Snacks', icon: '🍿', color: 'text-orange-600', bg: 'bg-orange-50' },
+  { value: 'pantry', label: 'Pantry', icon: '📦', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { value: 'other', label: 'Other', icon: '📋', color: 'text-slate-500', bg: 'bg-slate-50' },
+];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'pantry' | 'history'>('dashboard');
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(() => 
+    localStorage.getItem('foodspoils_onboarding_completed') === 'true'
+  );
+  const [activeScreen, setActiveScreen] = useState<ScreenKey>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  
+  // Adding / Editing form state
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
 
-  // Form State
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState('Produce');
-  const [quantity, setQuantity] = useState('1');
-  const [unit, setUnit] = useState('pcs');
-  const [expiryDate, setExpiryDate] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 7); // Default to 1 week from today
-    return d.toISOString().split('T')[0];
-  });
+  // Premium state
+  const [isPremium, setIsPremium] = useState(() => 
+    localStorage.getItem('foodspoils_is_premium') === 'true'
+  );
 
   // Database Queries
   const activeItems = useLiveQuery(() => db.items.where('status').equals('active').toArray()) || [];
-  const allHistory = useLiveQuery(() => db.items.where('status').anyOf('consumed', 'wasted').toArray()) || [];
+  const historyItems = useLiveQuery(() => db.items.where('status').anyOf('consumed', 'wasted').toArray()) || [];
 
   // Expiry Calculations
-  const getExpiryStatus = (dateStr: string) => {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const expDate = new Date(dateStr);
-    expDate.setHours(0,0,0,0);
-    
-    const diffTime = expDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const expiringSoon = activeItems.filter(i => {
+    const status = getExpiryStatus(i.expiryDate);
+    return status === 'soon' || status === 'urgent';
+  });
 
-    if (diffDays < 0) return { label: 'Expired', days: diffDays, color: 'text-rose-600 bg-rose-50 border-rose-200', badgeColor: 'bg-rose-500', icon: 'expired' };
-    if (diffDays <= 3) return { label: `Expiring in ${diffDays} day${diffDays === 1 ? '' : 's'}`, days: diffDays, color: 'text-amber-600 bg-amber-50 border-amber-200', badgeColor: 'bg-amber-500', icon: 'soon' };
-    return { label: `Fresh (${diffDays} days left)`, days: diffDays, color: 'text-emerald-600 bg-emerald-50 border-emerald-200', badgeColor: 'bg-emerald-500', icon: 'fresh' };
-  };
+  const expired = activeItems.filter(i => getExpiryStatus(i.expiryDate) === 'expired');
+  const freshCount = activeItems.filter(i => getExpiryStatus(i.expiryDate) === 'fresh');
 
-  // Preset Expiry Date helper
-  const setPresetDate = (days: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    setExpiryDate(d.toISOString().split('T')[0]);
-  };
+  // Submit Handler (Add or Edit)
+  const handleSubmitForm = async (formData: {
+    name: string;
+    category: string;
+    expiryDate: string;
+    quantity: number;
+    unit: string;
+    notes?: string;
+  }) => {
+    if (editingItem && editingItem.id !== undefined) {
+      // Edit mode
+      await db.items.update(editingItem.id, {
+        name: formData.name,
+        category: formData.category,
+        expiryDate: formData.expiryDate,
+        quantity: formData.quantity,
+        unit: formData.unit,
+        notes: formData.notes
+      });
+      setEditingItem(null);
+    } else {
+      // Add mode - check active item limit for Free Tier
+      if (!isPremium && activeItems.length >= 20) {
+        alert('⚠️ Free Tier Limit Reached!\n\nAs a Free user, you can track up to 20 active items in your pantry. Please upgrade to Premium in the Profile tab for unlimited items, household sharing, and barcode scanning!');
+        return;
+      }
 
-  // Add Item
-  const handleAddItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
-    const parsedQuantity = parseFloat(quantity) || 1;
-
-    const newItem: FoodItem = {
-      name: name.trim(),
-      category,
-      expiryDate,
-      quantity: parsedQuantity,
-      unit,
-      status: 'active',
-      createdAt: Date.now()
-    };
-
-    await db.items.add(newItem);
-    
-    // Reset Form
-    setName('');
-    setCategory('Produce');
-    setQuantity('1');
-    setUnit('pcs');
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
-    setExpiryDate(d.toISOString().split('T')[0]);
+      const newItem: FoodItem = {
+        name: formData.name,
+        category: formData.category,
+        expiryDate: formData.expiryDate,
+        quantity: formData.quantity,
+        unit: formData.unit,
+        notes: formData.notes,
+        status: 'active',
+        createdAt: Date.now()
+      };
+      await db.items.add(newItem);
+    }
     setShowAddForm(false);
   };
 
-  // Quick Action: Consume
+  const handleStartEdit = (item: FoodItem) => {
+    setEditingItem(item);
+    setShowAddForm(true);
+  };
+
+  const handleCancelForm = () => {
+    setEditingItem(null);
+    setShowAddForm(false);
+  };
+
+  // Quick Actions
   const handleConsumeItem = async (id: number) => {
     await db.items.update(id, { status: 'consumed' });
   };
 
-  // Quick Action: Waste
   const handleWasteItem = async (id: number) => {
     await db.items.update(id, { status: 'wasted' });
   };
 
-  // Quick Action: Delete
   const handleDeleteItem = async (id: number) => {
     if (confirm('Are you sure you want to permanently delete this item?')) {
       await db.items.delete(id);
     }
   };
 
-  // Quick Action: Restore to Active
   const handleRestoreItem = async (id: number) => {
     await db.items.update(id, { status: 'active' });
   };
 
-  // Toggle Category Collapsed
-  const toggleCategory = (cat: string) => {
-    setCollapsedCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
+  // Seeding Sample Data
+  const handleSeedSampleData = async () => {
+    await db.items.clear();
+    const sampleItems: FoodItem[] = [
+      {
+        name: 'Baby Spinach',
+        category: 'produce',
+        expiryDate: new Date(Date.now() + 1 * 86400000).toISOString().split('T')[0], // expiring soon
+        quantity: 1,
+        unit: 'bag',
+        notes: 'For morning smoothies',
+        status: 'active',
+        createdAt: Date.now()
+      },
+      {
+        name: 'Whole Milk',
+        category: 'dairy',
+        expiryDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0], // fresh
+        quantity: 1,
+        unit: 'gallon',
+        notes: 'Good for cereals',
+        status: 'active',
+        createdAt: Date.now()
+      },
+      {
+        name: 'Chicken Breast',
+        category: 'meat',
+        expiryDate: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0], // expired
+        quantity: 2,
+        unit: 'lb',
+        notes: 'Smell test before cooking',
+        status: 'active',
+        createdAt: Date.now()
+      },
+      {
+        name: 'Greek Yogurt',
+        category: 'dairy',
+        expiryDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0], // fresh
+        quantity: 1,
+        unit: 'container',
+        status: 'active',
+        createdAt: Date.now()
+      },
+      {
+        name: 'Sourdough Bread',
+        category: 'grains',
+        expiryDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0], // expiring soon
+        quantity: 1,
+        unit: 'loaf',
+        notes: 'Best if toasted',
+        status: 'active',
+        createdAt: Date.now()
+      }
+    ];
+    for (const item of sampleItems) {
+      await db.items.add(item);
+    }
+    alert('🎉 Sample grocery data successfully seeded into your pantry!');
   };
 
-  // Filter and search active items
+  // Clearing DB
+  const handleClearDatabase = async () => {
+    if (confirm('Are you sure you want to clear your entire pantry and history? This cannot be undone.')) {
+      await db.items.clear();
+      alert('🧹 Database successfully cleared!');
+    }
+  };
+
+  // Upgrading to Premium
+  const handleUpgradePremium = (upgrade: boolean) => {
+    localStorage.setItem('foodspoils_is_premium', upgrade ? 'true' : 'false');
+    setIsPremium(upgrade);
+    if (upgrade) {
+      alert('👑 Welcome to FoodSpoils Premium! You have unlocked unlimited items, barcode scanning, and AI suggestions.');
+    } else {
+      alert('Subscription cancelled. Reverted back to the Free Tier.');
+    }
+  };
+
+  // Onboarding Screen Render
+  if (!onboardingCompleted) {
+    return (
+      <OnboardingScreen 
+        onComplete={() => {
+          localStorage.setItem('foodspoils_onboarding_completed', 'true');
+          setOnboardingCompleted(true);
+        }} 
+      />
+    );
+  }
+
+  // Filter pantry items
   const filteredActiveItems = activeItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory === 'All' || item.category === filterCategory;
+    let matchesCategory = true;
+    if (filterCategory === 'Expiring Soon') {
+      const status = getExpiryStatus(item.expiryDate);
+      matchesCategory = status === 'soon' || status === 'urgent';
+    } else if (filterCategory === 'Expired') {
+      matchesCategory = getExpiryStatus(item.expiryDate) === 'expired';
+    } else if (filterCategory !== 'All') {
+      matchesCategory = item.category === filterCategory;
+    }
     return matchesSearch && matchesCategory;
   });
 
-  // Group active items by category
+  // Group pantry items by category
   const itemsByCategory: Record<string, FoodItem[]> = {};
   filteredActiveItems.forEach(item => {
     if (!itemsByCategory[item.category]) {
@@ -153,305 +247,223 @@ export default function App() {
     itemsByCategory[item.category].push(item);
   });
 
-  // Sorted items by urgency for Dashboard
-  const expiringSoonItems = [...activeItems]
-    .map(item => ({ ...item, expiryInfo: getExpiryStatus(item.expiryDate) }))
-    .sort((a, b) => a.expiryInfo.days - b.expiryInfo.days)
-    .slice(0, 5);
-
-  // Statistics
-  const totalWastedCount = allHistory.filter(i => i.status === 'wasted').length;
-  const totalConsumedCount = allHistory.filter(i => i.status === 'consumed').length;
-  const totalHistoryCount = allHistory.length;
-  
-  // Waste rate
-  const wasteRate = totalHistoryCount > 0 
-    ? Math.round((totalWastedCount / totalHistoryCount) * 100) 
-    : 0;
-
-  const savingsPotential = totalWastedCount * 4.5; // Average value estimate $4.50 per item
+  // Analytics
+  const totalWasted = historyItems.filter(i => i.status === 'wasted').length;
+  const totalConsumed = historyItems.filter(i => i.status === 'consumed').length;
+  const totalClosed = historyItems.length;
+  const wasteRate = totalClosed > 0 ? Math.round((totalWasted / totalClosed) * 100) : 0;
+  const dollarsWasted = totalWasted * 4.5; // estimate $4.50 per item
+  const dollarsSaved = totalConsumed * 4.5;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-24">
-      {/* Top Header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-slate-100 shadow-xs">
-        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-emerald-500 text-white p-1.5 rounded-xl">
-              <Apple className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 m-0 leading-tight">FoodSpoils</h1>
-              <p className="text-xs text-slate-400 font-medium">Keep food fresh, save money</p>
-            </div>
-          </div>
+    <div className="relative mx-auto min-h-screen max-w-md bg-gray-50 pb-24 font-sans shadow-sm border-x border-gray-100">
+      
+      {/* 1. DASHBOARD SCREEN */}
+      {activeScreen === 'dashboard' && (
+        <div className="animate-fade-in">
+          <Header 
+            title="FoodSpoils" 
+            subtitle="Track freshness. Save money." 
+            onScan={() => setActiveScreen('scan')} 
+          />
+          <WelcomeHeader userName="Alex" itemCount={activeItems.length} />
           
-          <button 
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
-          >
-            <Plus className="h-4 w-4" /> Add Item
-          </button>
-        </div>
-      </header>
+          <div className="px-4 pb-4">
+            <DashboardStats 
+              totalItems={activeItems.length}
+              expiringSoon={expiringSoon.length}
+              expired={expired.length}
+              freshCount={freshCount.length}
+              onExpiringClick={() => {
+                setActiveScreen('pantry');
+                setFilterCategory('Expiring Soon');
+              }}
+              onExpiredClick={() => {
+                setActiveScreen('pantry');
+                setFilterCategory('Expired');
+              }}
+            />
+          </div>
 
-      {/* Main Content Workspace (Mobile-First Constraints) */}
-      <main className="max-w-md mx-auto px-4 pt-4">
-        
-        {/* DASHBOARD TAB */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-4 animate-fade-in">
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-3 gap-2.5">
-              <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-2xs text-center">
-                <span className="text-xs text-slate-400 font-medium">Active</span>
-                <p className="text-2xl font-extrabold text-emerald-600 mt-1">{activeItems.length}</p>
+          {/* Section: Expiring Soon Priority List */}
+          <div className="px-4 pb-4">
+            <h2 className="mb-2 text-sm font-semibold text-gray-800">⚠️ Eat These First!</h2>
+            {expiringSoon.length === 0 ? (
+              <NoExpiringItems />
+            ) : (
+              <div className="flex flex-col gap-2">
+                {expiringSoon.map(item => (
+                  <FoodItemCard 
+                    key={item.id} 
+                    item={item} 
+                    onEdit={handleStartEdit}
+                    onDelete={handleDeleteItem}
+                    onConsume={handleConsumeItem}
+                    onWaste={handleWasteItem}
+                  />
+                ))}
               </div>
-              <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-2xs text-center">
-                <span className="text-xs text-slate-400 font-medium">Saved 😋</span>
-                <p className="text-2xl font-extrabold text-blue-600 mt-1">{totalConsumedCount}</p>
-              </div>
-              <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-2xs text-center">
-                <span className="text-xs text-slate-400 font-medium">Wasted 🗑️</span>
-                <p className="text-2xl font-extrabold text-rose-500 mt-1">{totalWastedCount}</p>
-              </div>
-            </div>
+            )}
+          </div>
 
-            {/* Waste Tracker Report Card */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 rounded-3xl shadow-md relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <TrendingDown className="h-28 w-28 -mr-4 -mt-4" />
-              </div>
-              <div className="relative z-10 space-y-3">
-                <div className="flex items-center gap-2 bg-white/10 px-2.5 py-1 rounded-lg w-fit text-xs font-semibold text-emerald-300">
-                  <Sparkles className="h-3 w-3" /> Household Impact
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-slate-300">Your Food Waste Rate</h3>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-3xl font-extrabold">{wasteRate}%</span>
-                    <span className="text-xs text-slate-400">of total discarded</span>
-                  </div>
-                </div>
-
-                <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden mt-2">
-                  <div className="bg-emerald-400 h-full" style={{ width: `${100 - wasteRate}%` }}></div>
-                </div>
-
-                <div className="flex justify-between items-center text-xs text-slate-300 pt-1">
-                  <span className="flex items-center gap-1 text-emerald-300">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Est. Money Saved: ${totalConsumedCount * 4.5}
-                  </span>
-                  <span className="text-rose-300">Wasted Val: ${savingsPotential}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Expiring Soon Quick Alert */}
-            <div className="bg-white rounded-3xl border border-slate-100 p-4 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-slate-900 font-bold">
-                  <Clock className="h-5 w-5 text-amber-500" />
-                  <h2>Eat These First!</h2>
-                </div>
-                <span className="text-xs bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full font-bold">Priority View</span>
-              </div>
-
-              {expiringSoonItems.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-sm space-y-1">
-                  <p>🎉 All your food is fresh!</p>
-                  <p className="text-xs text-slate-300">Add more items to track them.</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-50">
-                  {expiringSoonItems.map(item => {
-                    const status = getExpiryStatus(item.expiryDate);
-                    const catInfo = CATEGORY_MAP[item.category] || CATEGORY_MAP['Others'];
-                    return (
-                      <div key={item.id} className="py-2.5 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-2xl bg-slate-50 p-1.5 rounded-xl">{catInfo.emoji}</span>
-                          <div className="min-w-0">
-                            <h4 className="font-semibold text-sm text-slate-900 truncate">{item.name}</h4>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-xs font-medium text-slate-400">{item.quantity} {item.unit}</span>
-                              <span className="text-[10px] text-slate-300">•</span>
-                              <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${status.color}`}>
-                                {status.label}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => item.id && handleConsumeItem(item.id)}
-                            title="Consumed (Ate it!)"
-                            className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg transition-colors"
-                          >
-                            <Check className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => item.id && handleWasteItem(item.id)}
-                            title="Wasted (Threw away)"
-                            className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg transition-colors"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Quick Tips Box */}
-            <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100/50 p-4 text-emerald-800 text-xs flex gap-3">
-              <span className="text-2xl">💡</span>
-              <div className="space-y-1">
-                <p className="font-bold text-emerald-900">Pro Tip: Store veggies right!</p>
-                <p className="text-emerald-700 leading-relaxed">Leafy greens expire 3x faster when stored wet. Pat them completely dry and wrap in a paper towel before refrigerating!</p>
-              </div>
+          {/* Pro Tip Box */}
+          <div className="mx-4 mb-4 flex gap-3 rounded-md border border-green-100 bg-green-50 p-4 text-xs text-green-800">
+            <span className="text-xl" aria-hidden="true">💡</span>
+            <div className="space-y-1">
+              <p className="font-bold text-green-900">Pro Tip: Keep berries fresh!</p>
+              <p className="leading-relaxed">
+                Rinse berries in a mix of 1 part vinegar and 3 parts water before storing. It kills mold spores and extends their life by up to 2 weeks!
+              </p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* PANTRY TAB */}
-        {activeTab === 'pantry' && (
-          <div className="space-y-4 animate-fade-in">
-            
-            {/* Search & Filter Header */}
-            <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-2xs space-y-2.5">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search pantry..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 border-none rounded-xl py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 font-medium"
-                />
-              </div>
-
-              {/* Category Filter Pills (Horizontal Scroll) */}
-              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                <button
-                  onClick={() => setFilterCategory('All')}
-                  className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors ${
-                    filterCategory === 'All'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                  }`}
-                >
-                  All Items ({activeItems.length})
-                </button>
-                {CATEGORIES.map(cat => {
-                  const count = activeItems.filter(item => item.category === cat).length;
-                  const info = CATEGORY_MAP[cat];
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => setFilterCategory(cat)}
-                      className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                        filterCategory === cat
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                      }`}
-                    >
-                      <span>{info.emoji}</span>
-                      <span>{cat}</span>
-                      <span className="opacity-70">({count})</span>
-                    </button>
-                  );
-                })}
-              </div>
+      {/* 2. PANTRY SCREEN */}
+      {activeScreen === 'pantry' && (
+        <div className="animate-fade-in">
+          <Header 
+            title="Pantry" 
+            subtitle="Everything you have" 
+          />
+          
+          {/* Search and Filters */}
+          <div className="px-4 pb-3">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-800">📋 Inventory</h2>
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="inline-flex items-center gap-1 rounded-sm bg-fresh-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-fresh-600 transition-colors"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Item
+              </button>
             </div>
 
-            {/* List Grouped by Category */}
-            {Object.keys(itemsByCategory).length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 space-y-2">
-                <span className="text-4xl">🛒</span>
-                <p className="font-semibold text-slate-800">Your pantry is empty</p>
-                <p className="text-xs text-slate-400">Tap "Add Item" to start tracking your foods.</p>
+            <div className="relative mb-3">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search pantry items..."
+                className="w-full rounded-sm border border-gray-200 bg-white py-2 pl-9 pr-4 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500"
+              />
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <button
+                onClick={() => setFilterCategory('All')}
+                className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors ${
+                  filterCategory === 'All'
+                    ? 'bg-gray-800 text-white'
+                    : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                All ({activeItems.length})
+              </button>
+              <button
+                onClick={() => setFilterCategory('Expiring Soon')}
+                className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
+                  filterCategory === 'Expiring Soon'
+                    ? 'bg-yellow-500 text-white'
+                    : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                ⚠️ Expiring Soon
+              </button>
+              <button
+                onClick={() => setFilterCategory('Expired')}
+                className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
+                  filterCategory === 'Expired'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                🛑 Expired
+              </button>
+              {CATEGORIES_INFO.map(cat => {
+                const count = activeItems.filter(i => i.category === cat.value).length;
+                if (count === 0) return null;
+                return (
+                  <button
+                    key={cat.value}
+                    onClick={() => setFilterCategory(cat.value)}
+                    className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
+                      filterCategory === cat.value
+                        ? 'bg-fresh-500 text-white'
+                        : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span>{cat.icon}</span>
+                    <span>{cat.label}</span>
+                    <span className="opacity-70">({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Grouped Collapsible Category List */}
+          <div className="px-4 pb-4">
+            {activeItems.length === 0 ? (
+              <EmptyPantry onAddItem={() => setShowAddForm(true)} />
+            ) : filteredActiveItems.length === 0 ? (
+              <div className="py-12 text-center text-gray-400 text-sm">
+                🔍 No items match your search or filter.
               </div>
             ) : (
-              <div className="space-y-3">
-                {CATEGORIES.map(cat => {
-                  const items = itemsByCategory[cat] || [];
+              <div className="flex flex-col gap-3">
+                {CATEGORIES_INFO.map(cat => {
+                  const items = itemsByCategory[cat.value] || [];
                   if (items.length === 0) return null;
 
-                  const isCollapsed = collapsedCategories[cat];
-                  const catInfo = CATEGORY_MAP[cat];
-
+                  const isCollapsed = collapsedCategories[cat.value];
                   return (
-                    <div key={cat} className="bg-white rounded-2xl border border-slate-100 shadow-2xs overflow-hidden">
-                      {/* Category Header Bar */}
-                      <button 
-                        onClick={() => toggleCategory(cat)}
-                        className={`w-full px-4 py-3 flex items-center justify-between text-left font-bold text-sm ${catInfo.bg} ${catInfo.color}`}
+                    <div key={cat.value} className="rounded-md border border-gray-200 bg-white overflow-hidden shadow-sm">
+                      {/* Category Header */}
+                      <button
+                        onClick={() => setCollapsedCategories(prev => ({ ...prev, [cat.value]: !prev[cat.value] }))}
+                        className={`flex w-full items-center justify-between p-3 text-left font-semibold text-sm ${cat.bg} ${cat.color}`}
                       >
                         <div className="flex items-center gap-1.5">
-                          <span>{catInfo.emoji}</span>
-                          <span className="text-slate-950 font-extrabold">{cat}</span>
-                          <span className="text-xs font-semibold bg-white/80 px-2 py-0.5 rounded-full shadow-3xs">
+                          <span className="text-base" aria-hidden="true">{cat.icon}</span>
+                          <span>{cat.label}</span>
+                          <span className="rounded-full bg-white/80 px-2 py-0.5 text-2xs font-bold text-gray-700 shadow-sm">
                             {items.length}
                           </span>
                         </div>
-                        {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                        <svg 
+                          className={`h-4 w-4 transform transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor" 
+                          strokeWidth={2.5}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
                       </button>
 
-                      {/* Items Row list */}
+                      {/* Category Items */}
                       {!isCollapsed && (
-                        <div className="divide-y divide-slate-100">
-                          {items.map(item => {
-                            const status = getExpiryStatus(item.expiryDate);
-                            return (
-                              <div key={item.id} className="p-3.5 flex items-center justify-between gap-3 bg-white hover:bg-slate-50/50 transition-colors">
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="font-bold text-sm text-slate-900 truncate">{item.name}</h3>
-                                    <span className="text-xs text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
-                                      {item.quantity} {item.unit}
-                                    </span>
-                                  </div>
-                                  
-                                  <div className="flex items-center gap-1.5 mt-1 text-[11px]">
-                                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                    <span className="text-slate-500">Exp: {item.expiryDate}</span>
-                                    <span className={`font-bold px-1.5 py-0.5 rounded-md ${status.color}`}>
-                                      {status.label}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Pantry Action buttons */}
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    onClick={() => item.id && handleConsumeItem(item.id)}
-                                    title="Mark Consumed"
-                                    className="p-2 bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 rounded-xl transition-all"
-                                  >
-                                    <Check className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => item.id && handleWasteItem(item.id)}
-                                    title="Mark Wasted"
-                                    className="p-2 bg-rose-50 hover:bg-rose-500 hover:text-white text-rose-500 rounded-xl transition-all"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => item.id && handleDeleteItem(item.id)}
-                                    title="Delete Permanently"
-                                    className="p-2 text-slate-300 hover:text-slate-600 rounded-xl transition-all"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
+                        <div className="flex flex-col gap-2 p-3 bg-gray-50/30">
+                          {items.map(item => (
+                            <FoodItemCard
+                              key={item.id}
+                              item={item}
+                              onEdit={handleStartEdit}
+                              onDelete={handleDeleteItem}
+                              onConsume={handleConsumeItem}
+                              onWaste={handleWasteItem}
+                            />
+                          ))}
                         </div>
                       )}
                     </div>
@@ -460,285 +472,297 @@ export default function App() {
               </div>
             )}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* HISTORY & REPORTS TAB */}
-        {activeTab === 'history' && (
-          <div className="space-y-4 animate-fade-in">
-            {/* Visual Charts Overview */}
-            <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-2xs space-y-4">
-              <h2 className="text-base font-bold text-slate-900">Waste vs. Savings Analysis</h2>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 text-center">
-                  <span className="text-2xl">💚</span>
-                  <p className="text-xs text-slate-400 mt-1 font-medium">Consumed Total</p>
-                  <p className="text-xl font-extrabold text-emerald-600">{totalConsumedCount} items</p>
-                </div>
-                <div className="bg-rose-50/50 p-3 rounded-2xl border border-rose-100 text-center">
-                  <span className="text-2xl">💔</span>
-                  <p className="text-xs text-slate-400 mt-1 font-medium">Wasted Total</p>
-                  <p className="text-xl font-extrabold text-rose-600">{totalWastedCount} items</p>
-                </div>
-              </div>
-
-              {totalHistoryCount === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-xs">
-                  Ate or throw away food items to populate detailed chart analyses!
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs text-slate-500 font-bold">
-                    <span>Ate: {100 - wasteRate}%</span>
-                    <span>Wasted: {wasteRate}%</span>
-                  </div>
-                  <div className="flex h-5 rounded-xl overflow-hidden shadow-3xs">
-                    <div className="bg-emerald-400" style={{ width: `${100 - wasteRate}%` }}></div>
-                    <div className="bg-rose-400" style={{ width: `${wasteRate}%` }}></div>
-                  </div>
-                  <p className="text-[11px] text-slate-400 text-center leading-relaxed">
-                    Great work! Consuming your food saves money and reduces greenhouse gas emissions. Keep improving!
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* History Logs */}
-            <div className="bg-white rounded-3xl border border-slate-100 p-4 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-slate-900 font-bold">
-                  <History className="h-5 w-5 text-indigo-500" />
-                  <h2>Activity Log</h2>
-                </div>
-                <span className="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full font-bold">
-                  {allHistory.length} logs
-                </span>
-              </div>
-
-              {allHistory.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 text-sm">
-                  No logged foods yet. Change items status in pantry!
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-50 max-h-96 overflow-y-auto">
-                  {[...allHistory].reverse().map(item => {
-                    const catInfo = CATEGORY_MAP[item.category] || CATEGORY_MAP['Others'];
-                    const isConsumed = item.status === 'consumed';
-                    return (
-                      <div key={item.id} className="py-2.5 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-xl bg-slate-50 p-1.5 rounded-xl">{catInfo.emoji}</span>
-                          <div className="min-w-0">
-                            <h4 className="font-semibold text-sm text-slate-900 truncate">{item.name}</h4>
-                            <p className="text-xs text-slate-400">{item.quantity} {item.unit} • expired {item.expiryDate}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-xs font-bold px-2 py-1 rounded-lg ${
-                            isConsumed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-                          }`}>
-                            {isConsumed ? 'Ate 😋' : 'Wasted 🗑️'}
-                          </span>
-                          <button
-                            onClick={() => item.id && handleRestoreItem(item.id)}
-                            title="Restore back to pantry"
-                            className="p-1 text-slate-300 hover:text-slate-600 transition-colors"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-      </main>
-
-      {/* QUICK ADD ITEM SLIDEOVER / FORM MODAL */}
-      {showAddForm && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-t-3xl shadow-xl p-5 space-y-4 animate-slide-up">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-50">
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-1.5">
-                <Apple className="h-5 w-5 text-emerald-500" />
-                Add New Food
-              </h2>
-              <button 
-                onClick={() => setShowAddForm(false)}
-                className="bg-slate-50 p-1.5 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddItem} className="space-y-4">
-              
-              {/* Item Name */}
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Item Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Fresh Strawberries"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 font-semibold"
-                />
-              </div>
-
-              {/* Category Dropdown */}
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Category</label>
-                <select
-                  value={category}
-                  onChange={e => setCategory(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 font-semibold"
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>
-                      {CATEGORY_MAP[cat].emoji} {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Quantity & Unit Row */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Quantity</label>
-                  <input
-                    type="number"
-                    min="0.1"
-                    step="any"
-                    required
-                    value={quantity}
-                    onChange={e => setQuantity(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Unit</label>
-                  <select
-                    value={unit}
-                    onChange={e => setUnit(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 font-semibold"
-                  >
-                    {UNITS.map(u => (
-                      <option key={u} value={u}>{u}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Expiry Date with Smart presets */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Expiry Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400 pointer-events-none" />
-                  <input
-                    type="date"
-                    required
-                    value={expiryDate}
-                    onChange={e => setExpiryDate(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 font-semibold"
-                  />
-                </div>
-
-                {/* Date presets row */}
-                <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
-                  <button
-                    type="button"
-                    onClick={() => setPresetDate(3)}
-                    className="text-[10px] font-bold bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-100 hover:bg-slate-100"
-                  >
-                    +3 Days
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPresetDate(7)}
-                    className="text-[10px] font-bold bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-100 hover:bg-slate-100"
-                  >
-                    +1 Week
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPresetDate(14)}
-                    className="text-[10px] font-bold bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-100 hover:bg-slate-100"
-                  >
-                    +2 Weeks
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPresetDate(30)}
-                    className="text-[10px] font-bold bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-100 hover:bg-slate-100"
-                  >
-                    +1 Month
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit Buttons */}
+      {/* 3. BARCODE SCANNING SCREEN */}
+      {activeScreen === 'scan' && (
+        <div className="animate-fade-in">
+          <Header title="Barcode Scanner" />
+          
+          <div className="px-4">
+            <ScanPrompt onScan={() => alert('📱 Barcode scanner requires Premium Subscription. Upgrade now under Profile tab!')} />
+            
+            {/* Premium Benefits Banner */}
+            <div className="mt-4 rounded-md border border-yellow-200 bg-gradient-to-br from-amber-50 to-orange-50/30 p-5 shadow-sm text-sm space-y-4">
+              <h3 className="font-bold text-gray-800 flex items-center gap-1.5 text-base">
+                <span className="text-lg" aria-hidden="true">👑</span>
+                FoodSpoils Premium Benefits
+              </h3>
+              <ul className="space-y-2.5 text-xs text-gray-600 font-medium">
+                <li className="flex items-start gap-2">
+                  <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
+                  <span><strong>Instant Barcode Scanner</strong>: Skip manual entry entirely. Scan and register food in less than a second!</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
+                  <span><strong>Unlimited Items</strong>: Track more than 20 food items at once in your pantry.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
+                  <span><strong>Household Sharing</strong>: Sync pantry with up to 5 family members.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
+                  <span><strong>AI Recipes ("Use up!")</strong>: Generate immediate, mouthwatering recipes with soon-to-expire ingredients.</span>
+                </li>
+              </ul>
               <button
-                type="submit"
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-2xl text-sm transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-1"
+                onClick={() => {
+                  setActiveScreen('settings');
+                }}
+                className="w-full rounded-sm bg-coral-500 py-3 text-xs font-bold text-white hover:bg-coral-600 transition-colors shadow-sm"
               >
-                <Plus className="h-4.5 w-4.5" /> Save Food Item
+                Go to Profile to Upgrade
               </button>
-            </form>
+            </div>
           </div>
         </div>
       )}
 
-      {/* BOTTOM TAB NAV BAR */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-100 shadow-lg">
-        <div className="max-w-md mx-auto px-6 py-2.5 flex justify-around">
+      {/* 4. WASTE REPORT / ACTIVITY SCREEN */}
+      {activeScreen === 'list' && (
+        <div className="animate-fade-in">
+          <Header title="Waste Report" subtitle="Analyze household statistics" />
           
-          {/* Dashboard Tab */}
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center gap-1 ${
-              activeTab === 'dashboard' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <LayoutDashboard className="h-5.5 w-5.5" />
-            <span className="text-[10px] font-bold">Dashboard</span>
-          </button>
+          {/* Analysis Card */}
+          <div className="px-4 pb-4">
+            <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-4">
+              <h3 className="text-sm font-semibold text-gray-800">📈 Household Impact Overview</h3>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-md bg-green-50/50 border border-green-100 p-3 text-center">
+                  <span className="text-2xl" aria-hidden="true">😋</span>
+                  <p className="mt-1 text-2xs uppercase tracking-wider text-gray-400 font-semibold">Consumed</p>
+                  <p className="mt-0.5 text-lg font-bold text-green-700">{totalConsumed} items</p>
+                  <p className="text-[10px] text-gray-400">Est. Saved: ${dollarsSaved.toFixed(2)}</p>
+                </div>
+                <div className="rounded-md bg-red-50/50 border border-red-100 p-3 text-center">
+                  <span className="text-2xl" aria-hidden="true">🗑️</span>
+                  <p className="mt-1 text-2xs uppercase tracking-wider text-gray-400 font-semibold">Wasted</p>
+                  <p className="mt-0.5 text-lg font-bold text-red-700">{totalWasted} items</p>
+                  <p className="text-[10px] text-gray-400">Est. Loss: ${dollarsWasted.toFixed(2)}</p>
+                </div>
+              </div>
 
-          {/* Pantry Tab */}
-          <button
-            onClick={() => setActiveTab('pantry')}
-            className={`flex flex-col items-center gap-1 ${
-              activeTab === 'pantry' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <div className="relative">
-              <Apple className="h-5.5 w-5.5" />
-              {activeItems.length > 0 && (
-                <span className="absolute -top-1 -right-2 bg-emerald-500 text-white text-[9px] font-black h-4 w-4 rounded-full flex items-center justify-center border border-white">
-                  {activeItems.length}
-                </span>
+              {totalClosed === 0 ? (
+                <p className="text-center text-xs text-gray-400 py-2">
+                  Complete items in your pantry to generate detailed stats.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-medium text-gray-600">
+                    <span>Eaten: {100 - wasteRate}%</span>
+                    <span>Wasted: {wasteRate}%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-red-200 overflow-hidden">
+                    <div className="h-full bg-green-500" style={{ width: `${100 - wasteRate}%` }} />
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-gray-400 text-center">
+                    {wasteRate > 30 
+                      ? '⚠️ Your waste rate is a bit high. Try keeping expiring items at the top and plan meals beforehand!'
+                      : '🎉 Incredible work! You are keeping food out of the garbage and money in your pocket.'}
+                  </p>
+                </div>
               )}
             </div>
-            <span className="text-[10px] font-bold">Pantry</span>
-          </button>
+          </div>
 
-          {/* History Tab */}
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`flex flex-col items-center gap-1 ${
-              activeTab === 'history' ? 'text-emerald-500' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <History className="h-5.5 w-5.5" />
-            <span className="text-[10px] font-bold">Waste Report</span>
-          </button>
+          {/* Activity Logs */}
+          <div className="px-4 pb-4">
+            <h3 className="mb-2 text-sm font-semibold text-gray-800">🕒 Activity Log</h3>
+            {historyItems.length === 0 ? (
+              <div className="rounded-md border border-gray-200 bg-white p-8 text-center text-gray-400 text-xs">
+                No archived items yet. Mark items consumed (✔) or wasted (X) in the Pantry/Dashboard to log history!
+              </div>
+            ) : (
+              <div className="rounded-md border border-gray-200 bg-white overflow-hidden shadow-sm divide-y divide-gray-100">
+                {[...historyItems].reverse().map(item => {
+                  const cat = CATEGORIES_INFO.find(c => c.value === item.category);
+                  const isConsumed = item.status === 'consumed';
+                  return (
+                    <div key={item.id} className="flex items-center justify-between p-3.5 hover:bg-gray-50/50 transition-colors">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-lg" aria-hidden="true">{cat?.icon || '📋'}</span>
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-sm text-gray-800 truncate">{item.name}</h4>
+                          <p className="text-2xs text-gray-400">
+                            {item.quantity} {item.unit} · expired {item.expiryDate}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <span className={`rounded px-2 py-0.5 text-2xs font-bold ${
+                          isConsumed ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'
+                        }`}>
+                          {isConsumed ? 'Consumed' : 'Wasted'}
+                        </span>
+                        {item.id !== undefined && (
+                          <button
+                            onClick={() => handleRestoreItem(item.id!)}
+                            className="p-1.5 text-gray-300 hover:text-gray-600 transition-colors"
+                            title="Restore item to Pantry"
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
-      </nav>
+      )}
+
+      {/* 5. PROFILE & SETTINGS SCREEN */}
+      {activeScreen === 'settings' && (
+        <div className="animate-fade-in">
+          <Header title="Settings & Profile" />
+          
+          {/* Plan Banner */}
+          <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xs uppercase tracking-wider text-gray-400 font-bold">Current Plan</p>
+                <h3 className="text-base font-bold text-gray-800 flex items-center gap-1">
+                  {isPremium ? (
+                    <>
+                      <span className="text-fresh-500" aria-hidden="true">👑</span> FoodSpoils Premium
+                    </>
+                  ) : (
+                    'FoodSpoils Free'
+                  )}
+                </h3>
+              </div>
+              <span className={`rounded-full px-2.5 py-0.5 text-2xs font-bold ${
+                isPremium ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+              }`}>
+                {isPremium ? 'Unlimited' : 'Basic Tier'}
+              </span>
+            </div>
+
+            {/* If Free Tier - Show item usage progress */}
+            {!isPremium && (
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-2xs font-medium text-gray-400">
+                  <span>Pantry Capacity Usage</span>
+                  <span>{activeItems.length} / 20 items</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-300 ${activeItems.length >= 18 ? 'bg-red-500' : 'bg-fresh-500'}`} 
+                    style={{ width: `${Math.min(100, (activeItems.length / 20) * 100)}%` }} 
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Toggle Plan Actions */}
+            {isPremium ? (
+              <button
+                onClick={() => handleUpgradePremium(false)}
+                className="w-full rounded-sm border border-red-200 bg-red-50 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
+              >
+                Downgrade to Free Tier (Simulate)
+              </button>
+            ) : (
+              <div className="space-y-2 pt-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleUpgradePremium(true)}
+                    className="rounded-sm bg-fresh-500 py-3 text-2xs font-bold text-white hover:bg-fresh-600 transition-colors text-center shadow-xs"
+                  >
+                    Monthly ($4.99)
+                  </button>
+                  <button
+                    onClick={() => handleUpgradePremium(true)}
+                    className="relative rounded-sm bg-coral-500 py-3 text-2xs font-bold text-white hover:bg-coral-600 transition-colors text-center shadow-xs"
+                  >
+                    Annual ($39.99 - Save 33%)
+                    <span className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] text-white font-extrabold shadow-sm animate-pulse">
+                      Save
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Database Actions */}
+          <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-3">
+            <h3 className="text-sm font-semibold text-gray-800">🛠️ Developer & Sandbox Tools</h3>
+            
+            <div className="space-y-2">
+              <button
+                onClick={handleSeedSampleData}
+                className="w-full flex items-center justify-center gap-2 rounded-sm border border-gray-200 bg-white py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors min-h-touch"
+              >
+                <svg className="h-4 w-4 text-fresh-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Seed Sample Grocery Data
+              </button>
+              
+              <button
+                onClick={handleClearDatabase}
+                className="w-full flex items-center justify-center gap-2 rounded-sm border border-red-100 bg-white py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors min-h-touch"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Reset Database (Clear All)
+              </button>
+            </div>
+          </div>
+
+          {/* Info Block */}
+          <div className="mx-4 text-center space-y-1">
+            <p className="text-2xs text-gray-400 font-semibold">FoodSpoils App v1.1.0 · PWA Ready</p>
+            <p className="text-[10px] text-gray-300">Ratified and Owner-Endorsed on 2026-06-22</p>
+          </div>
+        </div>
+      )}
+
+      {/* OVERLAY: ADD / EDIT ITEM DRAWER */}
+      {showAddForm && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white rounded-t-3xl shadow-xl p-5 space-y-4 animate-slide-up relative">
+            
+            {/* Header / Cancel Button */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+              <h3 className="text-base font-bold text-gray-800">
+                {editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}
+              </h3>
+              <button
+                onClick={handleCancelForm}
+                className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Inline AddItemForm */}
+            <AddItemForm 
+              onSubmit={handleSubmitForm}
+              onCancel={handleCancelForm}
+              initialItem={editingItem || undefined}
+              className="border-none shadow-none !p-0 !bg-transparent"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* BOTTOM TAB NAVIGATION BAR */}
+      <BottomNav activeScreen={activeScreen} onNavigate={setActiveScreen} />
+
     </div>
   );
 }

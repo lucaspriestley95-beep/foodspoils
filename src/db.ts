@@ -7,6 +7,7 @@ export interface FoodItem {
   expiryDate: string; // YYYY-MM-DD
   quantity: number;
   unit: string; // 'pcs', 'g', 'ml', 'bags', etc.
+  notes?: string; // custom notes
   status: 'active' | 'consumed' | 'wasted';
   createdAt: number; // timestamp
 }
