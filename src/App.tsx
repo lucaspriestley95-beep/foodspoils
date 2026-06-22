@@ -181,7 +181,7 @@ export default function App() {
               <Apple className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 m-0 leading-tight">FreshKeep</h1>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 m-0 leading-tight">FoodSpoils</h1>
               <p className="text-xs text-slate-400 font-medium">Keep food fresh, save money</p>
             </div>
           </div>
