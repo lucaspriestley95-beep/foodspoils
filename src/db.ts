@@ -11,11 +11,11 @@ export interface FoodItem {
   createdAt: number; // timestamp
 }
 
-export class FreshKeepDatabase extends Dexie {
+export class FoodSpoilsDatabase extends Dexie {
   items!: Table<FoodItem>;
 
   constructor() {
-    super('FreshKeepDatabase');
+    super('FoodSpoilsDatabase');
     this.version(1).stores({
       items: '++id, name, category, expiryDate, status, createdAt'
     });

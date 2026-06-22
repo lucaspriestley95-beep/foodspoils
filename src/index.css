@@ -1,1 +1,75 @@
 @import "tailwindcss";
+
+/* ═══════════════════════════════════
+   FoodSpoils — Tailwind V4 Theme
+   ═══════════════════════════════════ */
+
+@theme {
+  /* Primary — Fresh Greens */
+  --color-fresh-50: #F0FFF4;
+  --color-fresh-100: #D4EDDA;
+  --color-fresh-200: #A8E6B6;
+  --color-fresh-400: #4ADE80;
+  --color-fresh-500: #22C55E;
+  --color-fresh-600: #16A34A;
+  --color-fresh-700: #15803D;
+  --color-fresh-900: #14532D;
+
+  /* Accent — Warm Coral */
+  --color-coral-400: #FD8B64;
+  --color-coral-500: #FF6B35;
+  --color-coral-600: #E85D26;
+
+  /* Status colors for expiry tracking */
+  --color-status-fresh: #22C55E;
+  --color-status-soon: #FACC15;
+  --color-status-urgent: #FF6B35;
+  --color-status-expired: #EF4444;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* Custom shadows */
+  --shadow-glow-green: 0 0 12px rgba(34, 197, 94, 0.3);
+}
+
+/* ═══════════════════════════════════
+   Animations
+   ═══════════════════════════════════ */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ═══════════════════════════════════
+   Tailwind V4 Animations (via @utility)
+   ═══════════════════════════════════ */
+
+@utility animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@utility animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+@utility animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
