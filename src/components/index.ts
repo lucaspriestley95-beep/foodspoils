@@ -10,3 +10,4 @@ export type { ScreenKey } from './BottomNav';
 export { Header, WelcomeHeader } from './Header';
 export { OnboardingScreen } from './OnboardingScreen';
 export { ReferralSection } from './ReferralSection';
+export { AuthScreen } from './AuthScreen';

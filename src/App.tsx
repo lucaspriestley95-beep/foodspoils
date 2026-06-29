@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type FoodItem } from './db';
+import { supabase, type DbFoodItem } from './lib/supabase';
+import { useAuth } from './contexts/AuthContext';
 import { 
   getExpiryStatus, 
   FoodItemCard,
@@ -14,6 +16,7 @@ import {
   WelcomeHeader,
   OnboardingScreen,
   ReferralSection,
+  AuthScreen,
   type ScreenKey
 } from './components';
 
@@ -32,6 +35,8 @@ const CATEGORIES_INFO = [
 ];
 
 export default function App() {
+  const { user, signOut } = useAuth();
+  
   const [onboardingCompleted, setOnboardingCompleted] = useState(() => 
     localStorage.getItem('foodspoils_onboarding_completed') === 'true'
   );
@@ -44,28 +49,97 @@ export default function App() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
 
-  // Premium state
+  // Supabase Data State
+  const [cloudItems, setCloudItems] = useState<DbFoodItem[]>([]);
+  const [cloudLoading, setCloudItemsLoading] = useState(false);
+
+  // Premium state (Local fallback + Cloud profile)
   const [isPremium, setIsPremium] = useState(() => 
     localStorage.getItem('foodspoils_is_premium') === 'true'
   );
+
+  // Fetch Supabase data when user is logged in
+  useEffect(() => {
+    if (user) {
+      fetchCloudData();
+    } else {
+      setCloudItems([]);
+    }
+  }, [user]);
+
+  const fetchCloudData = async () => {
+    if (!user) return;
+    setCloudItemsLoading(true);
+    
+    // Fetch profile
+    const { data: profileData } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    if (profileData) {
+      setIsPremium(profileData.is_premium);
+      localStorage.setItem('foodspoils_is_premium', profileData.is_premium ? 'true' : 'false');
+    }
+
+    // Fetch items
+    const { data: itemsData } = await supabase
+      .from('food_items')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (itemsData) {
+      setCloudItems(itemsData);
+    }
+    setCloudItemsLoading(false);
+  };
 
   // Check URL query parameters for successful payment simulation or return
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('stripe_payment') === 'success') {
-      localStorage.setItem('foodspoils_is_premium', 'true');
-      setIsPremium(true);
+      handleUpgradePremium(true);
       // Clean up URL query parameters
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
       
       alert('👑 Thank you for your subscription! FoodSpoils Premium has been successfully unlocked. Enjoy unlimited pantry items, barcode scanning, and AI suggestions!');
     }
-  }, []);
+  }, [user]);
 
-  // Database Queries
-  const activeItems = useLiveQuery(() => db.items.where('status').equals('active').toArray()) || [];
-  const historyItems = useLiveQuery(() => db.items.where('status').anyOf('consumed', 'wasted').toArray()) || [];
+  // Database Queries (Local Dexie)
+  const localActiveItems = useLiveQuery(() => db.items.where('status').equals('active').toArray()) || [];
+  const localHistoryItems = useLiveQuery(() => db.items.where('status').anyOf('consumed', 'wasted').toArray()) || [];
+
+  // Unified data access (Cloud if logged in, otherwise local)
+  const activeItems = user 
+    ? cloudItems.filter(i => i.status === 'active').map(i => ({
+        id: i.id as any, // adapt ID types
+        name: i.name,
+        category: i.category,
+        expiryDate: i.expiry_date,
+        quantity: i.quantity,
+        unit: i.unit,
+        notes: i.notes,
+        status: i.status,
+        createdAt: new Date(i.created_at).getTime()
+      }))
+    : localActiveItems;
+
+  const historyItems = user
+    ? cloudItems.filter(i => i.status !== 'active').map(i => ({
+        id: i.id as any,
+        name: i.name,
+        category: i.category,
+        expiryDate: i.expiry_date,
+        quantity: i.quantity,
+        unit: i.unit,
+        notes: i.notes,
+        status: i.status,
+        createdAt: new Date(i.created_at).getTime()
+      }))
+    : localHistoryItems;
 
   // Expiry Calculations
   const expiringSoon = activeItems.filter(i => {
@@ -85,35 +159,69 @@ export default function App() {
     unit: string;
     notes?: string;
   }) => {
-    if (editingItem && editingItem.id !== undefined) {
+    // Check active item limit for Free Tier
+    if (!isPremium && activeItems.length >= 10 && !editingItem) {
+      if (confirm('⚠️ Free Tier Limit Reached!\n\nAs a Free user, you can track up to 10 active items. Would you like to upgrade to Premium for unlimited items?')) {
+        handleRedirectToStripe('monthly');
+      }
+      return;
+    }
+
+    if (editingItem) {
       // Edit mode
-      await db.items.update(editingItem.id, {
-        name: formData.name,
-        category: formData.category,
-        expiryDate: formData.expiryDate,
-        quantity: formData.quantity,
-        unit: formData.unit,
-        notes: formData.notes
-      });
+      if (user) {
+        const { error } = await supabase
+          .from('food_items')
+          .update({
+            name: formData.name,
+            category: formData.category,
+            expiry_date: formData.expiryDate,
+            quantity: formData.quantity,
+            unit: formData.unit,
+            notes: formData.notes
+          })
+          .eq('id', editingItem.id);
+        if (!error) fetchCloudData();
+      } else {
+        await db.items.update(editingItem.id as number, {
+          name: formData.name,
+          category: formData.category,
+          expiryDate: formData.expiryDate,
+          quantity: formData.quantity,
+          unit: formData.unit,
+          notes: formData.notes
+        });
+      }
       setEditingItem(null);
     } else {
-      // Add mode - check active item limit for Free Tier
-      if (!isPremium && activeItems.length >= 10) {
-        alert('⚠️ Free Tier Limit Reached!\n\nAs a Free user, you can track up to 10 active items in your pantry. Please upgrade to Premium in the Profile tab for unlimited items, household sharing, and barcode scanning!');
-        return;
+      // Add mode
+      if (user) {
+        const { error } = await supabase
+          .from('food_items')
+          .insert({
+            user_id: user.id,
+            name: formData.name,
+            category: formData.category,
+            expiry_date: formData.expiryDate,
+            quantity: formData.quantity,
+            unit: formData.unit,
+            notes: formData.notes,
+            status: 'active'
+          });
+        if (!error) fetchCloudData();
+      } else {
+        const newItem: FoodItem = {
+          name: formData.name,
+          category: formData.category,
+          expiryDate: formData.expiryDate,
+          quantity: formData.quantity,
+          unit: formData.unit,
+          notes: formData.notes,
+          status: 'active',
+          createdAt: Date.now()
+        };
+        await db.items.add(newItem);
       }
-
-      const newItem: FoodItem = {
-        name: formData.name,
-        category: formData.category,
-        expiryDate: formData.expiryDate,
-        quantity: formData.quantity,
-        unit: formData.unit,
-        notes: formData.notes,
-        status: 'active',
-        createdAt: Date.now()
-      };
-      await db.items.add(newItem);
     }
     setShowAddForm(false);
   };
@@ -129,96 +237,103 @@ export default function App() {
   };
 
   // Quick Actions
-  const handleConsumeItem = async (id: number) => {
-    await db.items.update(id, { status: 'consumed' });
-  };
-
-  const handleWasteItem = async (id: number) => {
-    await db.items.update(id, { status: 'wasted' });
-  };
-
-  const handleDeleteItem = async (id: number) => {
-    if (confirm('Are you sure you want to permanently delete this item?')) {
-      await db.items.delete(id);
+  const handleConsumeItem = async (id: number | string) => {
+    if (user) {
+      await supabase.from('food_items').update({ status: 'consumed' }).eq('id', id);
+      fetchCloudData();
+    } else {
+      await db.items.update(id as number, { status: 'consumed' });
     }
   };
 
-  const handleRestoreItem = async (id: number) => {
-    await db.items.update(id, { status: 'active' });
+  const handleWasteItem = async (id: number | string) => {
+    if (user) {
+      await supabase.from('food_items').update({ status: 'wasted' }).eq('id', id);
+      fetchCloudData();
+    } else {
+      await db.items.update(id as number, { status: 'wasted' });
+    }
+  };
+
+  const handleDeleteItem = async (id: number | string) => {
+    if (confirm('Are you sure you want to permanently delete this item?')) {
+      if (user) {
+        await supabase.from('food_items').delete().eq('id', id);
+        fetchCloudData();
+      } else {
+        await db.items.delete(id as number);
+      }
+    }
+  };
+
+  const handleRestoreItem = async (id: number | string) => {
+    if (user) {
+      await supabase.from('food_items').update({ status: 'active' }).eq('id', id);
+      fetchCloudData();
+    } else {
+      await db.items.update(id as number, { status: 'active' });
+    }
   };
 
   // Seeding Sample Data
   const handleSeedSampleData = async () => {
-    await db.items.clear();
-    const sampleItems: FoodItem[] = [
-      {
-        name: 'Baby Spinach',
-        category: 'produce',
-        expiryDate: new Date(Date.now() + 1 * 86400000).toISOString().split('T')[0], // expiring soon
-        quantity: 1,
-        unit: 'bag',
-        notes: 'For morning smoothies',
-        status: 'active',
-        createdAt: Date.now()
-      },
-      {
-        name: 'Whole Milk',
-        category: 'dairy',
-        expiryDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0], // fresh
-        quantity: 1,
-        unit: 'gallon',
-        notes: 'Good for cereals',
-        status: 'active',
-        createdAt: Date.now()
-      },
-      {
-        name: 'Chicken Breast',
-        category: 'meat',
-        expiryDate: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0], // expired
-        quantity: 2,
-        unit: 'lb',
-        notes: 'Smell test before cooking',
-        status: 'active',
-        createdAt: Date.now()
-      },
-      {
-        name: 'Greek Yogurt',
-        category: 'dairy',
-        expiryDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0], // fresh
-        quantity: 1,
-        unit: 'container',
-        status: 'active',
-        createdAt: Date.now()
-      },
-      {
-        name: 'Sourdough Bread',
-        category: 'grains',
-        expiryDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0], // expiring soon
-        quantity: 1,
-        unit: 'loaf',
-        notes: 'Best if toasted',
-        status: 'active',
-        createdAt: Date.now()
-      }
+    const sampleItems = [
+      { name: 'Baby Spinach', category: 'produce', expiryDate: new Date(Date.now() + 1 * 86400000).toISOString().split('T')[0], quantity: 1, unit: 'bag', notes: 'For morning smoothies' },
+      { name: 'Whole Milk', category: 'dairy', expiryDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0], quantity: 1, unit: 'gallon', notes: 'Good for cereals' },
+      { name: 'Chicken Breast', category: 'meat', expiryDate: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0], quantity: 2, unit: 'lb', notes: 'Smell test before cooking' },
+      { name: 'Greek Yogurt', category: 'dairy', expiryDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0], quantity: 1, unit: 'container' },
+      { name: 'Sourdough Bread', category: 'grains', expiryDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0], quantity: 1, unit: 'loaf', notes: 'Best if toasted' }
     ];
-    for (const item of sampleItems) {
-      await db.items.add(item);
+
+    if (user) {
+      const { error } = await supabase.from('food_items').insert(
+        sampleItems.map(item => ({
+          user_id: user.id,
+          name: item.name,
+          category: item.category,
+          expiry_date: item.expiryDate,
+          quantity: item.quantity,
+          unit: item.unit,
+          notes: item.notes,
+          status: 'active'
+        }))
+      );
+      if (!error) fetchCloudData();
+    } else {
+      await db.items.clear();
+      for (const item of sampleItems) {
+        await db.items.add({ ...item, status: 'active', createdAt: Date.now() } as FoodItem);
+      }
     }
-    alert('🎉 Sample grocery data successfully seeded into your pantry!');
+    alert('🎉 Sample grocery data successfully seeded!');
   };
 
   // Clearing DB
   const handleClearDatabase = async () => {
     if (confirm('Are you sure you want to clear your entire pantry and history? This cannot be undone.')) {
-      await db.items.clear();
+      if (user) {
+        await supabase.from('food_items').delete().eq('user_id', user.id);
+        fetchCloudData();
+      } else {
+        await db.items.clear();
+      }
       alert('🧹 Database successfully cleared!');
     }
   };
 
   // Upgrading to Premium
-  const handleUpgradePremium = (upgrade: boolean) => {
-    localStorage.setItem('foodspoils_is_premium', upgrade ? 'true' : 'false');
-    setIsPremium(upgrade);
+  const handleUpgradePremium = async (upgrade: boolean) => {
+    if (user) {
+      await supabase
+        .from('user_profiles')
+        .update({ is_premium: upgrade })
+        .eq('id', user.id);
+      fetchCloudData();
+    } else {
+      localStorage.setItem('foodspoils_is_premium', upgrade ? 'true' : 'false');
+      setIsPremium(upgrade);
+    }
+    
     if (upgrade) {
       alert('👑 Welcome to FoodSpoils Premium! You have unlocked unlimited items, barcode scanning, and AI suggestions.');
     } else {
@@ -228,15 +343,12 @@ export default function App() {
 
   // Redirect to Stripe Secure Checkout
   const handleRedirectToStripe = (plan: 'monthly' | 'annual') => {
-    // Real Stripe test-mode payment links pre-created for FoodSpoils Premium subscription products
     const paymentLink = plan === 'monthly'
       ? 'https://buy.stripe.com/test_8wM2aD6Qv8vC56o3cd'
       : 'https://buy.stripe.com/test_eVaeXdfmX0T642k4gh';
 
-    // Open Stripe Secure Checkout in a new window/tab
     window.open(paymentLink, '_blank');
 
-    // Prompt for sandbox testing simulation bypass
     if (confirm('🔒 Secure Stripe Checkout has been opened in a new tab!\n\nTo complete payment:\n1. Use any Stripe test card (e.g., 4242 4242...) in the checkout form.\n2. Or, click OK here to instantly simulate a successful subscription upgrade for local testing.')) {
       handleUpgradePremium(true);
     }
@@ -283,7 +395,7 @@ export default function App() {
   const totalConsumed = historyItems.filter(i => i.status === 'consumed').length;
   const totalClosed = historyItems.length;
   const wasteRate = totalClosed > 0 ? Math.round((totalWasted / totalClosed) * 100) : 0;
-  const dollarsWasted = totalWasted * 4.5; // estimate $4.50 per item
+  const dollarsWasted = totalWasted * 4.5;
   const dollarsSaved = totalConsumed * 4.5;
 
   return (
@@ -297,7 +409,7 @@ export default function App() {
             subtitle="Track freshness. Save money." 
             onScan={() => setActiveScreen('scan')} 
           />
-          <WelcomeHeader userName="Alex" itemCount={activeItems.length} />
+          <WelcomeHeader userName={user?.email?.split('@')[0] || "Alex"} itemCount={activeItems.length} />
           
           {!isPremium && (
             <div className="mx-4 mb-3 rounded-md bg-amber-50 border border-amber-100 p-2.5 text-center text-xs text-amber-800 font-semibold flex items-center justify-center gap-1.5 shadow-sm">
@@ -329,7 +441,6 @@ export default function App() {
             />
           </div>
 
-          {/* Section: Expiring Soon Priority List */}
           <div className="px-4 pb-4">
             <h2 className="mb-2 text-sm font-semibold text-gray-800">⚠️ Eat These First!</h2>
             {expiringSoon.length === 0 ? (
@@ -350,13 +461,12 @@ export default function App() {
             )}
           </div>
 
-          {/* Pro Tip Box */}
           <div className="mx-4 mb-4 flex gap-3 rounded-md border border-green-100 bg-green-50 p-4 text-xs text-green-800">
             <span className="text-xl" aria-hidden="true">💡</span>
             <div className="space-y-1">
               <p className="font-bold text-green-900">Pro Tip: Keep berries fresh!</p>
               <p className="leading-relaxed">
-                Rinse berries in a mix of 1 part vinegar and 3 parts water before storing. It kills mold spores and extends their life by up to 2 weeks!
+                Rinse berries in a mix of 1 part vinegar and 3 parts water before storing. It kills mold spores and extends their life!
               </p>
             </div>
           </div>
@@ -366,12 +476,8 @@ export default function App() {
       {/* 2. PANTRY SCREEN */}
       {activeScreen === 'pantry' && (
         <div className="animate-fade-in">
-          <Header 
-            title="Pantry" 
-            subtitle="Everything you have" 
-          />
+          <Header title="Pantry" subtitle={user ? "Cloud Synced" : "Everything you have"} />
           
-          {/* Search and Filters */}
           <div className="px-4 pb-3">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-gray-800">📋 Inventory</h2>
@@ -401,14 +507,11 @@ export default function App() {
               />
             </div>
 
-            {/* Filter Pills */}
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               <button
                 onClick={() => setFilterCategory('All')}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors ${
-                  filterCategory === 'All'
-                    ? 'bg-gray-800 text-white'
-                    : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                  filterCategory === 'All' ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
                 }`}
               >
                 All ({activeItems.length})
@@ -416,9 +519,7 @@ export default function App() {
               <button
                 onClick={() => setFilterCategory('Expiring Soon')}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                  filterCategory === 'Expiring Soon'
-                    ? 'bg-yellow-500 text-white'
-                    : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                  filterCategory === 'Expiring Soon' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
                 }`}
               >
                 ⚠️ Expiring Soon
@@ -426,9 +527,7 @@ export default function App() {
               <button
                 onClick={() => setFilterCategory('Expired')}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                  filterCategory === 'Expired'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                  filterCategory === 'Expired' ? 'bg-red-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
                 }`}
               >
                 🛑 Expired
@@ -441,9 +540,7 @@ export default function App() {
                     key={cat.value}
                     onClick={() => setFilterCategory(cat.value)}
                     className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                      filterCategory === cat.value
-                        ? 'bg-fresh-500 text-white'
-                        : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                      filterCategory === cat.value ? 'bg-fresh-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
                     }`}
                   >
                     <span>{cat.icon}</span>
@@ -455,24 +552,21 @@ export default function App() {
             </div>
           </div>
 
-          {/* Grouped Collapsible Category List */}
           <div className="px-4 pb-4">
-            {activeItems.length === 0 ? (
+            {cloudLoading ? (
+              <div className="py-12 text-center text-gray-400 text-sm animate-pulse">☁️ Syncing items...</div>
+            ) : activeItems.length === 0 ? (
               <EmptyPantry onAddItem={() => setShowAddForm(true)} />
             ) : filteredActiveItems.length === 0 ? (
-              <div className="py-12 text-center text-gray-400 text-sm">
-                🔍 No items match your search or filter.
-              </div>
+              <div className="py-12 text-center text-gray-400 text-sm">🔍 No items match.</div>
             ) : (
               <div className="flex flex-col gap-3">
                 {CATEGORIES_INFO.map(cat => {
                   const items = itemsByCategory[cat.value] || [];
                   if (items.length === 0) return null;
-
                   const isCollapsed = collapsedCategories[cat.value];
                   return (
                     <div key={cat.value} className="rounded-md border border-gray-200 bg-white overflow-hidden shadow-sm">
-                      {/* Category Header */}
                       <button
                         onClick={() => setCollapsedCategories(prev => ({ ...prev, [cat.value]: !prev[cat.value] }))}
                         className={`flex w-full items-center justify-between p-3 text-left font-semibold text-sm ${cat.bg} ${cat.color}`}
@@ -480,33 +574,16 @@ export default function App() {
                         <div className="flex items-center gap-1.5">
                           <span className="text-base" aria-hidden="true">{cat.icon}</span>
                           <span>{cat.label}</span>
-                          <span className="rounded-full bg-white/80 px-2 py-0.5 text-2xs font-bold text-gray-700 shadow-sm">
-                            {items.length}
-                          </span>
+                          <span className="rounded-full bg-white/80 px-2 py-0.5 text-2xs font-bold text-gray-700 shadow-sm">{items.length}</span>
                         </div>
-                        <svg 
-                          className={`h-4 w-4 transform transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor" 
-                          strokeWidth={2.5}
-                        >
+                        <svg className={`h-4 w-4 transform transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
-
-                      {/* Category Items */}
                       {!isCollapsed && (
                         <div className="flex flex-col gap-2 p-3 bg-gray-50/30">
                           {items.map(item => (
-                            <FoodItemCard
-                              key={item.id}
-                              item={item}
-                              onEdit={handleStartEdit}
-                              onDelete={handleDeleteItem}
-                              onConsume={handleConsumeItem}
-                              onWaste={handleWasteItem}
-                            />
+                            <FoodItemCard key={item.id} item={item} onEdit={handleStartEdit} onDelete={handleDeleteItem} onConsume={handleConsumeItem} onWaste={handleWasteItem} />
                           ))}
                         </div>
                       )}
@@ -523,102 +600,57 @@ export default function App() {
       {activeScreen === 'scan' && (
         <div className="animate-fade-in">
           <Header title="Barcode Scanner" />
-          
           <div className="px-4">
             <ScanPrompt onScan={() => alert('📱 Barcode scanner requires Premium Subscription. Upgrade now under Profile tab!')} />
-            
-            {/* Premium Benefits Banner */}
             <div className="mt-4 rounded-md border border-yellow-200 bg-gradient-to-br from-amber-50 to-orange-50/30 p-5 shadow-sm text-sm space-y-4">
-              <h3 className="font-bold text-gray-800 flex items-center gap-1.5 text-base">
-                <span className="text-lg" aria-hidden="true">👑</span>
-                FoodSpoils Premium Benefits
-              </h3>
+              <h3 className="font-bold text-gray-800 flex items-center gap-1.5 text-base">👑 FoodSpoils Premium Benefits</h3>
               <ul className="space-y-2.5 text-xs text-gray-600 font-medium">
-                <li className="flex items-start gap-2">
-                  <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
-                  <span><strong>Instant Barcode Scanner</strong>: Skip manual entry entirely. Scan and register food in less than a second!</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
-                  <span><strong>Unlimited Items</strong>: Track more than 10 food items at once in your pantry.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
-                  <span><strong>Household Sharing</strong>: Sync pantry with up to 5 family members.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-fresh-500 font-bold" aria-hidden="true">✔</span>
-                  <span><strong>AI Recipes ("Use up!")</strong>: Generate immediate, mouthwatering recipes with soon-to-expire ingredients.</span>
-                </li>
+                <li className="flex items-start gap-2"><span>✅</span><span><strong>Instant Barcode Scanner</strong>: Skip manual entry entirely.</span></li>
+                <li className="flex items-start gap-2"><span>✅</span><span><strong>Cloud Sync</strong>: Access your pantry from any device.</span></li>
+                <li className="flex items-start gap-2"><span>✅</span><span><strong>Household Sharing</strong>: Sync pantry with up to 5 family members.</span></li>
+                <li className="flex items-start gap-2"><span>✅</span><span><strong>AI Recipes</strong>: Use ingredients before they expire.</span></li>
               </ul>
-              <button
-                onClick={() => {
-                  setActiveScreen('settings');
-                }}
-                className="w-full rounded-sm bg-coral-500 py-3 text-xs font-bold text-white hover:bg-coral-600 transition-colors shadow-sm"
-              >
-                Go to Profile to Upgrade
-              </button>
+              <button onClick={() => setActiveScreen('settings')} className="w-full rounded-sm bg-coral-500 py-3 text-xs font-bold text-white hover:bg-coral-600 transition-colors shadow-sm">Go to Profile to Upgrade</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 4. WASTE REPORT / ACTIVITY SCREEN */}
+      {/* 4. WASTE REPORT SCREEN */}
       {activeScreen === 'list' && (
         <div className="animate-fade-in">
           <Header title="Waste Report" subtitle="Analyze household statistics" />
-          
-          {/* Analysis Card */}
           <div className="px-4 pb-4">
             <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-4">
               <h3 className="text-sm font-semibold text-gray-800">📈 Household Impact Overview</h3>
-              
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-md bg-green-50/50 border border-green-100 p-3 text-center">
-                  <span className="text-2xl" aria-hidden="true">😋</span>
+                  <span className="text-2xl">😋</span>
                   <p className="mt-1 text-2xs uppercase tracking-wider text-gray-400 font-semibold">Consumed</p>
                   <p className="mt-0.5 text-lg font-bold text-green-700">{totalConsumed} items</p>
                   <p className="text-[10px] text-gray-400">Est. Saved: ${dollarsSaved.toFixed(2)}</p>
                 </div>
                 <div className="rounded-md bg-red-50/50 border border-red-100 p-3 text-center">
-                  <span className="text-2xl" aria-hidden="true">🗑️</span>
+                  <span className="text-2xl">🗑️</span>
                   <p className="mt-1 text-2xs uppercase tracking-wider text-gray-400 font-semibold">Wasted</p>
                   <p className="mt-0.5 text-lg font-bold text-red-700">{totalWasted} items</p>
                   <p className="text-[10px] text-gray-400">Est. Loss: ${dollarsWasted.toFixed(2)}</p>
                 </div>
               </div>
-
               {totalClosed === 0 ? (
-                <p className="text-center text-xs text-gray-400 py-2">
-                  Complete items in your pantry to generate detailed stats.
-                </p>
+                <p className="text-center text-xs text-gray-400 py-2">Complete items to generate stats.</p>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-medium text-gray-600">
-                    <span>Eaten: {100 - wasteRate}%</span>
-                    <span>Wasted: {wasteRate}%</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-red-200 overflow-hidden">
-                    <div className="h-full bg-green-500" style={{ width: `${100 - wasteRate}%` }} />
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-gray-400 text-center">
-                    {wasteRate > 30 
-                      ? '⚠️ Your waste rate is a bit high. Try keeping expiring items at the top and plan meals beforehand!'
-                      : '🎉 Incredible work! You are keeping food out of the garbage and money in your pocket.'}
-                  </p>
+                  <div className="flex justify-between text-xs font-medium text-gray-600"><span>Eaten: {100 - wasteRate}%</span><span>Wasted: {wasteRate}%</span></div>
+                  <div className="h-2 w-full rounded-full bg-red-200 overflow-hidden"><div className="h-full bg-green-500" style={{ width: `${100 - wasteRate}%` }} /></div>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Activity Logs */}
           <div className="px-4 pb-4">
             <h3 className="mb-2 text-sm font-semibold text-gray-800">🕒 Activity Log</h3>
             {historyItems.length === 0 ? (
-              <div className="rounded-md border border-gray-200 bg-white p-8 text-center text-gray-400 text-xs">
-                No archived items yet. Mark items consumed (✔) or wasted (X) in the Pantry/Dashboard to log history!
-              </div>
+              <div className="rounded-md border border-gray-200 bg-white p-8 text-center text-gray-400 text-xs">No archived items yet.</div>
             ) : (
               <div className="rounded-md border border-gray-200 bg-white overflow-hidden shadow-sm divide-y divide-gray-100">
                 {[...historyItems].reverse().map(item => {
@@ -627,32 +659,15 @@ export default function App() {
                   return (
                     <div key={item.id} className="flex items-center justify-between p-3.5 hover:bg-gray-50/50 transition-colors">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-lg" aria-hidden="true">{cat?.icon || '📋'}</span>
+                        <span className="text-lg">{cat?.icon || '📋'}</span>
                         <div className="min-w-0">
                           <h4 className="font-semibold text-sm text-gray-800 truncate">{item.name}</h4>
-                          <p className="text-2xs text-gray-400">
-                            {item.quantity} {item.unit} · expired {item.expiryDate}
-                          </p>
+                          <p className="text-2xs text-gray-400">{item.quantity} {item.unit} · expired {item.expiryDate}</p>
                         </div>
                       </div>
-
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <span className={`rounded px-2 py-0.5 text-2xs font-bold ${
-                          isConsumed ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'
-                        }`}>
-                          {isConsumed ? 'Consumed' : 'Wasted'}
-                        </span>
-                        {item.id !== undefined && (
-                          <button
-                            onClick={() => handleRestoreItem(item.id!)}
-                            className="p-1.5 text-gray-300 hover:text-gray-600 transition-colors"
-                            title="Restore item to Pantry"
-                          >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" />
-                            </svg>
-                          </button>
-                        )}
+                        <span className={`rounded px-2 py-0.5 text-2xs font-bold ${isConsumed ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>{isConsumed ? 'Consumed' : 'Wasted'}</span>
+                        <button onClick={() => handleRestoreItem(item.id)} className="p-1.5 text-gray-300 hover:text-gray-600 transition-colors" title="Restore item to Pantry"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" /></svg></button>
                       </div>
                     </div>
                   );
@@ -668,148 +683,89 @@ export default function App() {
         <div className="animate-fade-in">
           <Header title="Settings & Profile" />
           
-          {/* Referral Section */}
           <ReferralSection />
 
-          {/* Plan Banner */}
+          {/* User Account Section */}
+          <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-4">
+            <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+              <svg className="h-4 w-4 text-fresh-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Account
+            </h3>
+            
+            {user ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600 font-medium">{user.email}</p>
+                  <button 
+                    onClick={signOut}
+                    className="text-xs font-bold text-coral-500 hover:text-coral-600 underline"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+                <div className="bg-fresh-50 rounded p-2 text-[10px] text-fresh-700 font-medium">
+                  ☁️ Cloud Sync Active
+                </div>
+              </div>
+            ) : (
+              <AuthScreen onSuccess={() => {}} />
+            )}
+          </div>
+
           <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-3.5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xs uppercase tracking-wider text-gray-400 font-bold">Current Plan</p>
                 <h3 className="text-base font-bold text-gray-800 flex items-center gap-1">
-                  {isPremium ? (
-                    <>
-                      <span className="text-fresh-500" aria-hidden="true">👑</span> FoodSpoils Premium
-                    </>
-                  ) : (
-                    'FoodSpoils Free'
-                  )}
+                  {isPremium ? <><span className="text-fresh-500">👑</span> FoodSpoils Premium</> : 'FoodSpoils Free'}
                 </h3>
               </div>
-              <span className={`rounded-full px-2.5 py-0.5 text-2xs font-bold ${
-                isPremium ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-              }`}>
-                {isPremium ? 'Unlimited' : 'Basic Tier'}
-              </span>
+              <span className={`rounded-full px-2.5 py-0.5 text-2xs font-bold ${isPremium ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{isPremium ? 'Unlimited' : 'Basic Tier'}</span>
             </div>
 
-            {/* If Free Tier - Show item usage progress */}
             {!isPremium && (
               <div className="space-y-1.5">
-                <div className="flex justify-between text-2xs font-medium text-gray-400">
-                  <span>Pantry Capacity Usage</span>
-                  <span>{activeItems.length} / 10 items</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-300 ${activeItems.length >= 9 ? 'bg-red-500' : 'bg-fresh-500'}`} 
-                    style={{ width: `${Math.min(100, (activeItems.length / 10) * 100)}%` }} 
-                  />
-                </div>
+                <div className="flex justify-between text-2xs font-medium text-gray-400"><span>Pantry Capacity Usage</span><span>{activeItems.length} / 10 items</span></div>
+                <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden"><div className={`h-full transition-all duration-300 ${activeItems.length >= 9 ? 'bg-red-500' : 'bg-fresh-500'}`} style={{ width: `${Math.min(100, (activeItems.length / 10) * 100)}%` }} /></div>
               </div>
             )}
 
-            {/* Toggle Plan Actions */}
             {isPremium ? (
-              <button
-                onClick={() => handleUpgradePremium(false)}
-                className="w-full rounded-sm border border-red-200 bg-red-50 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
-              >
-                Downgrade to Free Tier (Simulate)
-              </button>
+              <button onClick={() => handleUpgradePremium(false)} className="w-full rounded-sm border border-red-200 bg-red-50 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors">Downgrade to Free Tier (Simulate)</button>
             ) : (
-              <div className="space-y-2 pt-1">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => handleRedirectToStripe('monthly')}
-                    className="rounded-sm bg-fresh-500 py-3 text-2xs font-bold text-white hover:bg-fresh-600 transition-colors text-center shadow-xs"
-                  >
-                    Monthly ($4.99)
-                  </button>
-                  <button
-                    onClick={() => handleRedirectToStripe('annual')}
-                    className="relative rounded-sm bg-coral-500 py-3 text-2xs font-bold text-white hover:bg-coral-600 transition-colors text-center shadow-xs"
-                  >
-                    Annual ($39.99 - Save 33%)
-                    <span className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] text-white font-extrabold shadow-sm animate-pulse">
-                      Save
-                    </span>
-                  </button>
-                </div>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button onClick={() => handleRedirectToStripe('monthly')} className="rounded-sm bg-fresh-500 py-3 text-2xs font-bold text-white hover:bg-fresh-600 transition-colors text-center shadow-xs">Monthly ($4.99)</button>
+                <button onClick={() => handleRedirectToStripe('annual')} className="relative rounded-sm bg-coral-500 py-3 text-2xs font-bold text-white hover:bg-coral-600 transition-colors text-center shadow-xs">Annual ($39.99 - Save 33%)<span className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] text-white font-extrabold shadow-sm animate-pulse">Save</span></button>
               </div>
             )}
           </div>
 
-          {/* Database Actions */}
           <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-3">
-            <h3 className="text-sm font-semibold text-gray-800">🛠️ Developer & Sandbox Tools</h3>
-            
+            <h3 className="text-sm font-semibold text-gray-800">🛠️ Developer Tools</h3>
             <div className="space-y-2">
-              <button
-                onClick={handleSeedSampleData}
-                className="w-full flex items-center justify-center gap-2 rounded-sm border border-gray-200 bg-white py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors min-h-touch"
-              >
-                <svg className="h-4 w-4 text-fresh-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Seed Sample Grocery Data
-              </button>
-              
-              <button
-                onClick={handleClearDatabase}
-                className="w-full flex items-center justify-center gap-2 rounded-sm border border-red-100 bg-white py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors min-h-touch"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Reset Database (Clear All)
-              </button>
+              <button onClick={handleSeedSampleData} className="w-full flex items-center justify-center gap-2 rounded-sm border border-gray-200 bg-white py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors min-h-touch"><span>🌱</span> Seed Sample Grocery Data</button>
+              <button onClick={handleClearDatabase} className="w-full flex items-center justify-center gap-2 rounded-sm border border-red-100 bg-white py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors min-h-touch"><span>🗑️</span> Reset Database (Clear All)</button>
             </div>
           </div>
-
-          {/* Info Block */}
-          <div className="mx-4 text-center space-y-1">
-            <p className="text-2xs text-gray-400 font-semibold">FoodSpoils App v1.1.0 · PWA Ready</p>
-            <p className="text-[10px] text-gray-300">Ratified and Owner-Endorsed on 2026-06-22</p>
-          </div>
+          <div className="mx-4 text-center space-y-1"><p className="text-2xs text-gray-400 font-semibold">FoodSpoils App v1.2.0 · Supabase Ready</p></div>
         </div>
       )}
 
-      {/* OVERLAY: ADD / EDIT ITEM DRAWER */}
       {showAddForm && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs">
           <div className="w-full max-w-md bg-white rounded-t-3xl shadow-xl p-5 space-y-4 animate-slide-up relative">
-            
-            {/* Header / Cancel Button */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-              <h3 className="text-base font-bold text-gray-800">
-                {editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}
-              </h3>
-              <button
-                onClick={handleCancelForm}
-                className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Close"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <h3 className="text-base font-bold text-gray-800">{editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}</h3>
+              <button onClick={handleCancelForm} className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
-
-            {/* Inline AddItemForm */}
-            <AddItemForm 
-              onSubmit={handleSubmitForm}
-              onCancel={handleCancelForm}
-              initialItem={editingItem || undefined}
-              className="border-none shadow-none !p-0 !bg-transparent"
-            />
+            <AddItemForm onSubmit={handleSubmitForm} onCancel={handleCancelForm} initialItem={editingItem || undefined} className="border-none shadow-none !p-0 !bg-transparent" />
           </div>
         </div>
       )}
 
-      {/* BOTTOM TAB NAVIGATION BAR */}
       <BottomNav activeScreen={activeScreen} onNavigate={setActiveScreen} />
-
     </div>
   );
 }
