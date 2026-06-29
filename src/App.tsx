@@ -13,6 +13,7 @@ import {
   Header,
   WelcomeHeader,
   OnboardingScreen,
+  ReferralSection,
   type ScreenKey
 } from './components';
 
@@ -667,6 +668,9 @@ export default function App() {
         <div className="animate-fade-in">
           <Header title="Settings & Profile" />
           
+          {/* Referral Section */}
+          <ReferralSection />
+
           {/* Plan Banner */}
           <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-3.5">
             <div className="flex items-center justify-between">
