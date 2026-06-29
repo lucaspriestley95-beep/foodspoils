@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type FoodItem } from './db';
 import { supabase, type DbFoodItem } from './lib/supabase';
 import { useAuth } from './contexts/AuthContext';
+import { STRIPE_LINKS } from './lib/stripe-links';
 import { 
   getExpiryStatus, 
   FoodItemCard,
@@ -355,12 +356,8 @@ export default function App() {
   };
 
   // Redirect to Stripe Secure Checkout
-  const handleRedirectToStripe = (plan: 'monthly' | 'annual') => {
-    const paymentLink = plan === 'monthly'
-      ? 'https://buy.stripe.com/test_8wM2aD6Qv8vC56o3cd'
-      : 'https://buy.stripe.com/test_eVaeXdfmX0T642k4gh';
-
-    window.open(paymentLink, '_blank');
+  const handleRedirectToStripe = (plan: 'monthly' | 'annual' | 'lifetime') => {
+    window.open(STRIPE_LINKS[plan], '_blank');
 
     if (confirm('🔒 Secure Stripe Checkout has been opened in a new tab!\n\nTo complete payment:\n1. Use any Stripe test card (e.g., 4242 4242...) in the checkout form.\n2. Or, click OK here to instantly simulate a successful subscription upgrade for local testing.')) {
       handleUpgradePremium(true);
@@ -744,6 +741,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button onClick={() => handleRedirectToStripe('monthly')} className="rounded-sm bg-fresh-500 py-3 text-2xs font-bold text-white hover:bg-fresh-600 transition-colors text-center shadow-xs">Monthly ($4.99)</button>
                 <button onClick={() => handleRedirectToStripe('annual')} className="relative rounded-sm bg-coral-500 py-3 text-2xs font-bold text-white hover:bg-coral-600 transition-colors text-center shadow-xs">Annual ($39.99 - Save 33%)<span className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] text-white font-extrabold shadow-sm animate-pulse">Save</span></button>
+                <button onClick={() => handleRedirectToStripe('lifetime')} className="col-span-2 rounded-sm bg-indigo-600 py-3 text-2xs font-bold text-white hover:bg-indigo-700 transition-colors text-center shadow-xs">Lifetime Access ($99.99)</button>
               </div>
             )}
           </div>
