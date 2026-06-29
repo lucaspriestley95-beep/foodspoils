@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type FoodItem } from './db';
-import { 
+import { openCheckout } from './lib/stripe-links';
   Plus, 
   Trash2, 
   Check, 
