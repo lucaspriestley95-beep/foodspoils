@@ -16,6 +16,7 @@ import {
   WelcomeHeader,
   OnboardingScreen,
   ReferralSection,
+  ProfileCustomization,
   AuthScreen,
   type ScreenKey
 } from './components';
@@ -57,6 +58,18 @@ export default function App() {
   const [isPremium, setIsPremium] = useState(() => 
     localStorage.getItem('foodspoils_is_premium') === 'true'
   );
+
+  // Body scroll lock when modal is open
+  useEffect(() => {
+    if (showAddForm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAddForm]);
 
   // Fetch Supabase data when user is logged in
   useEffect(() => {
@@ -481,15 +494,6 @@ export default function App() {
           <div className="px-4 pb-3">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-gray-800">📋 Inventory</h2>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center gap-1 rounded-sm bg-fresh-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-fresh-600 transition-colors"
-              >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Item
-              </button>
             </div>
 
             <div className="relative mb-3">
@@ -684,6 +688,8 @@ export default function App() {
           <Header title="Settings & Profile" />
           
           <ReferralSection />
+          
+          {user && <ProfileCustomization />}
 
           {/* User Account Section */}
           <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-4">
@@ -754,8 +760,13 @@ export default function App() {
       )}
 
       {showAddForm && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-t-3xl shadow-xl p-5 space-y-4 animate-slide-up relative">
+        <div 
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCancelForm();
+          }}
+        >
+          <div className="w-full max-w-md bg-white rounded-t-3xl shadow-xl p-5 space-y-4 animate-slide-up relative max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-gray-100 pb-2">
               <h3 className="text-base font-bold text-gray-800">{editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}</h3>
               <button onClick={handleCancelForm} className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
@@ -763,6 +774,19 @@ export default function App() {
             <AddItemForm onSubmit={handleSubmitForm} onCancel={handleCancelForm} initialItem={editingItem || undefined} className="border-none shadow-none !p-0 !bg-transparent" />
           </div>
         </div>
+      )}
+
+      {/* Floating Action Button */}
+      {!showAddForm && onboardingCompleted && (activeScreen === 'dashboard' || activeScreen === 'pantry' || activeScreen === 'list') && (
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="fixed bottom-24 right-6 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-fresh-500 text-white shadow-lg shadow-fresh-500/40 transition-all hover:bg-fresh-600 hover:scale-110 active:scale-95"
+          aria-label="Add Item"
+        >
+          <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
       )}
 
       <BottomNav activeScreen={activeScreen} onNavigate={setActiveScreen} />

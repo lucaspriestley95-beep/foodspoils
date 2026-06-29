@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { COMMON_FOODS } from '../data/commonFoods';
+import type { CommonFood } from '../data/commonFoods';
 
 interface AddItemFormProps {
   onSubmit: (item: {
@@ -37,151 +39,362 @@ const CATEGORIES = [
 
 const UNITS = ['piece(s)', 'oz', 'lb', 'g', 'kg', 'cup', 'tbsp', 'tsp', 'fl oz', 'ml', 'L', 'box', 'can', 'jar', 'bunch', 'bag'];
 
+const getFutureDate = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split('T')[0];
+};
+
+const formatDateShort = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
 export function AddItemForm({ onSubmit, onCancel, initialItem, className = '' }: AddItemFormProps) {
   const [name, setName] = useState(() => initialItem?.name || '');
-  const [category, setCategory] = useState(() => initialItem?.category || 'dairy');
-  const [expiryDate, setExpiryDate] = useState(() => initialItem?.expiryDate || '');
+  const [category, setCategory] = useState(() => {
+    if (initialItem?.category) return initialItem.category;
+    return localStorage.getItem('foodspoils_last_category') || 'produce';
+  });
+  const [expiryDate, setExpiryDate] = useState(() => initialItem?.expiryDate || getFutureDate(7));
   const [quantity, setQuantity] = useState(() => initialItem?.quantity || 1);
   const [unit, setUnit] = useState(() => initialItem?.unit || 'piece(s)');
   const [notes, setNotes] = useState(() => initialItem?.notes || '');
+  const [isExpanded, setIsExpanded] = useState(!!initialItem);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(!initialItem);
+
+  const filteredFoods = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return COMMON_FOODS.filter(food => 
+      food.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 6);
+  }, [searchQuery]);
+
+  const handleSelectFood = (food: CommonFood) => {
+    // Commit the item immediately for true "one-tap" entry
+    onSubmit({
+      name: food.name,
+      category: food.category,
+      expiryDate: getFutureDate(food.shelfLifeDays),
+      quantity: 1,
+      unit: 'piece(s)'
+    });
+    
+    // Reset state for next time
+    setSearchQuery('');
+    // We don't need to setShowSearchResults(false) because the modal will likely close,
+    // but if it doesn't, resetting to search view is good.
+    setShowSearchResults(true);
+  };
+
+  const handleSelectCategory = (catValue: string) => {
+    setCategory(catValue);
+    // When a category is tapped in search view, maybe we just set it and stay there?
+    // Or filter search? For now let's just set it and expand the form.
+    setShowSearchResults(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !expiryDate) return;
-    onSubmit({ name: name.trim(), category, expiryDate, quantity, unit, notes: notes.trim() || undefined });
-    setName('');
-    setExpiryDate('');
-    setQuantity(1);
-    setUnit('piece(s)');
-    setNotes('');
+    
+    localStorage.setItem('foodspoils_last_category', category);
+    
+    onSubmit({ 
+      name: name.trim(), 
+      category, 
+      expiryDate, 
+      quantity, 
+      unit, 
+      notes: notes.trim() || undefined 
+    });
+    
+    if (!initialItem) {
+      setName('');
+      setExpiryDate(getFutureDate(7));
+      setQuantity(1);
+      setUnit('piece(s)');
+      setNotes('');
+      setShowSearchResults(true);
+      setSearchQuery('');
+    }
+  };
+
+  const handleQuickExpiry = (days: number) => {
+    setExpiryDate(getFutureDate(days));
   };
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split('T')[0];
+  const minDate = new Date().toISOString().split('T')[0];
+
+  const quickExpiryOptions = [
+    { label: 'Today', days: 0 },
+    { label: 'Tomorrow', days: 1 },
+    { label: '+3 Days', days: 3 },
+    { label: '+1 Week', days: 7 },
+    { label: '+2 Weeks', days: 14 },
+    { label: '+1 Month', days: 30 },
+  ];
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={`animate-slide-up rounded-md border border-gray-200 bg-white p-4 shadow-sm ${className}`}
-    >
-      <h2 className="mb-4 text-lg font-semibold text-gray-800">{initialItem ? 'Edit Item' : 'Add New Item'}</h2>
-
-      {/* Name */}
-      <div className="mb-3">
-        <label htmlFor="item-name" className="mb-1 block text-sm font-medium text-gray-600">
-          Item Name *
-        </label>
-        <input
-          id="item-name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Baby spinach, Chicken breast..."
-          required
-          className="w-full rounded-sm border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors focus:border-fresh-500 focus:bg-white focus:ring-2 focus:ring-fresh-500/20"
-        />
-      </div>
-
-      {/* Category */}
-      <div className="mb-3">
-        <label htmlFor="item-category" className="mb-1 block text-sm font-medium text-gray-600">
-          Category
-        </label>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              type="button"
-              onClick={() => setCategory(cat.value)}
-              className={`flex flex-col items-center gap-1 rounded-sm p-2 text-xs transition-colors ${
-                category === cat.value
-                  ? 'bg-fresh-100 text-fresh-700 ring-2 ring-fresh-500/40'
-                  : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-              }`}
-            >
-              <span className="text-lg" aria-hidden="true">{cat.icon}</span>
-              <span>{cat.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Expiry Date & Quantity row */}
-      <div className="mb-3 grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="item-expiry" className="mb-1 block text-sm font-medium text-gray-600">
-            Expiry Date *
-          </label>
-          <input
-            id="item-expiry"
-            type="date"
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-            min={minDate}
-            required
-            className="w-full rounded-sm border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 outline-none transition-colors focus:border-fresh-500 focus:bg-white focus:ring-2 focus:ring-fresh-500/20"
-          />
-        </div>
-        <div>
-          <label htmlFor="item-qty" className="mb-1 block text-sm font-medium text-gray-600">
-            Quantity
-          </label>
-          <div className="flex gap-2">
-            <input
-              id="item-qty"
-              type="number"
-              min={1}
-              value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-16 rounded-sm border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 outline-none transition-colors focus:border-fresh-500 focus:bg-white focus:ring-2 focus:ring-fresh-500/20"
-            />
-            <select
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              className="flex-1 rounded-sm border border-gray-200 bg-gray-50 px-2 py-2.5 text-sm text-gray-800 outline-none transition-colors focus:border-fresh-500 focus:bg-white focus:ring-2 focus:ring-fresh-500/20"
-            >
-              {UNITS.map((u) => (
-                <option key={u} value={u}>{u}</option>
-              ))}
-            </select>
+    <div className={`space-y-4 ${className}`}>
+      {/* Search Header - Only for new items */}
+      {!initialItem && showSearchResults && (
+        <div className="space-y-4 animate-fade-in">
+          <div>
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              Search Common Foods
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for Milk, Eggs, Spinach..."
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 pl-10 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                autoFocus
+              />
+              <svg className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
           </div>
+
+          {searchQuery.trim() && filteredFoods.length > 0 ? (
+            <div className="grid grid-cols-1 gap-2">
+              {filteredFoods.map(food => (
+                <button
+                  key={food.name}
+                  onClick={() => handleSelectFood(food)}
+                  className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3 text-left hover:border-fresh-200 hover:bg-fresh-50 transition-all active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{CATEGORIES.find(c => c.value === food.category)?.icon || '📦'}</span>
+                    <div>
+                      <div className="text-sm font-bold text-gray-800">{food.name}</div>
+                      <div className="text-[10px] text-gray-400 uppercase tracking-tight">{food.category}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-bold text-fresh-600">+{food.shelfLifeDays} days</div>
+                    <div className="text-[10px] text-gray-400">Typical</div>
+                  </div>
+                </button>
+              ))}
+              <button 
+                onClick={() => { setName(searchQuery); setShowSearchResults(false); }}
+                className="p-2 text-center text-xs font-semibold text-gray-500 hover:text-fresh-600"
+              >
+                Can't find it? Use "{searchQuery}" manually
+              </button>
+            </div>
+          ) : !searchQuery.trim() ? (
+            <div>
+              <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                Or Browse Categories
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {CATEGORIES.slice(0, 9).map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => handleSelectCategory(cat.value)}
+                    className="flex flex-col items-center gap-1 rounded-lg border border-gray-100 bg-white py-3 text-[10px] transition-all hover:bg-fresh-50 active:scale-95"
+                  >
+                    <span className="text-xl">{cat.icon}</span>
+                    <span className="font-semibold text-gray-600">{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+             <div className="py-8 text-center">
+                <p className="text-sm text-gray-500 mb-4">No exact matches for "{searchQuery}"</p>
+                <button 
+                  onClick={() => { setName(searchQuery); setShowSearchResults(false); }}
+                  className="rounded-full bg-fresh-500 px-6 py-2 text-sm font-bold text-white shadow-sm hover:bg-fresh-600 transition-all"
+                >
+                  Add "{searchQuery}" Manually
+                </button>
+             </div>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* Notes */}
-      <div className="mb-4">
-        <label htmlFor="item-notes" className="mb-1 block text-sm font-medium text-gray-600">
-          Notes (optional)
-        </label>
-        <input
-          id="item-notes"
-          type="text"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="e.g. Bought on sale, shared with roommate..."
-          className="w-full rounded-sm border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors focus:border-fresh-500 focus:bg-white focus:ring-2 focus:ring-fresh-500/20"
-        />
-      </div>
+      {(!showSearchResults || initialItem) && (
+        <form onSubmit={handleSubmit} className="animate-slide-up space-y-4">
+          {/* Name Input */}
+          <div>
+            <div className="flex justify-between items-end mb-1">
+              <label htmlFor="item-name" className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                Item Name *
+              </label>
+              {!initialItem && (
+                <button 
+                  type="button" 
+                  onClick={() => setShowSearchResults(true)}
+                  className="text-[10px] font-bold text-fresh-600 hover:underline"
+                >
+                  Back to Search
+                </button>
+              )}
+            </div>
+            <input
+              id="item-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Baby spinach, Milk..."
+              required
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+            />
+          </div>
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          className="flex-1 rounded-sm bg-fresh-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-fresh-600 active:bg-fresh-700 min-h-touch"
-        >
-          {initialItem ? 'Save Changes' : 'Add Item'}
-        </button>
-        {onCancel && (
+          {/* Expiry Date & Quick Options */}
+          <div>
+            <label htmlFor="item-expiry" className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              Expiry Date *
+            </label>
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {quickExpiryOptions.map((opt) => (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => handleQuickExpiry(opt.days)}
+                    className={`flex flex-col items-center justify-center rounded-lg border py-2 transition-all active:scale-95 ${
+                      expiryDate === getFutureDate(opt.days)
+                        ? 'border-fresh-500 bg-fresh-50 ring-1 ring-fresh-500'
+                        : 'border-gray-100 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className={`text-[10px] font-bold ${expiryDate === getFutureDate(opt.days) ? 'text-fresh-700' : 'text-gray-600'}`}>{opt.label}</span>
+                    <span className="text-[9px] text-gray-400">{formatDateShort(getFutureDate(opt.days))}</span>
+                  </button>
+                ))}
+              </div>
+              
+              <div className="relative">
+                <input
+                  id="item-expiry"
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  min={minDate}
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                />
+                <div className="absolute right-10 top-3 text-[10px] font-bold text-gray-400 pointer-events-none">
+                  Custom Date
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Toggle More Details */}
           <button
             type="button"
-            onClick={onCancel}
-            className="min-h-touch rounded-sm border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 active:bg-gray-100"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex w-full items-center justify-between py-1 text-xs font-bold text-fresh-600 hover:text-fresh-700 transition-colors"
           >
-            Cancel
+            <span>{isExpanded ? 'Collapse Details' : 'Adjust Category, Qty, Notes'}</span>
+            <svg className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
-        )}
-      </div>
-    </form>
+
+          {isExpanded && (
+            <div className="space-y-4 pt-1 animate-fade-in">
+              {/* Category */}
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                  Category
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.value}
+                      type="button"
+                      onClick={() => setCategory(cat.value)}
+                      className={`flex flex-col items-center gap-1 rounded-lg border py-2 text-[10px] transition-all ${
+                        category === cat.value
+                          ? 'bg-fresh-50 border-fresh-200 text-fresh-700 font-bold'
+                          : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="text-base">{cat.icon}</span>
+                      <span className="truncate w-full px-1 text-center">{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quantity & Unit */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="item-qty" className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Quantity
+                  </label>
+                  <div className="flex gap-1.5">
+                    <input
+                      id="item-qty"
+                      type="number"
+                      min={1}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-16 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                    />
+                    <select
+                      value={unit}
+                      onChange={(e) => setUnit(e.target.value)}
+                      className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-2 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                    >
+                      {UNITS.map((u) => (
+                        <option key={u} value={u}>{u}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="item-notes" className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Notes
+                  </label>
+                  <input
+                    id="item-notes"
+                    type="text"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="e.g. For salad"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder-gray-400 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit"
+              className="flex-1 rounded-xl bg-fresh-500 px-4 py-4 text-sm font-bold text-white transition-all hover:bg-fresh-600 active:scale-95 shadow-md shadow-fresh-500/20"
+            >
+              {initialItem ? 'Save Changes' : 'Add to Pantry'}
+            </button>
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="rounded-xl border border-gray-200 bg-white px-4 py-4 text-sm font-bold text-gray-500 transition-all hover:bg-gray-50 active:bg-gray-100"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      )}
+    </div>
   );
 }

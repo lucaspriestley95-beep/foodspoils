@@ -21,6 +21,8 @@ export type DbFoodItem = {
 export type UserProfile = {
   id: string;
   email: string;
+  display_name?: string;
+  avatar_url?: string;
   is_premium: boolean;
   premium_expires_at?: string;
   created_at: string;

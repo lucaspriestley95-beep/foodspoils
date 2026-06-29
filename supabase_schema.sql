@@ -4,6 +4,8 @@
 CREATE TABLE IF NOT EXISTS public.user_profiles (
     id UUID REFERENCES auth.users(id) PRIMARY KEY,
     email TEXT NOT NULL,
+    display_name TEXT,
+    avatar_url TEXT,
     is_premium BOOLEAN DEFAULT FALSE,
     premium_expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
