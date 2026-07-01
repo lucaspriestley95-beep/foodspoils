@@ -12,3 +12,4 @@ export { OnboardingScreen } from './OnboardingScreen';
 export { ReferralSection } from './ReferralSection';
 export { ProfileCustomization } from './ProfileCustomization';
 export { AuthScreen } from './AuthScreen';
+export { BarcodeScanner } from './BarcodeScanner';

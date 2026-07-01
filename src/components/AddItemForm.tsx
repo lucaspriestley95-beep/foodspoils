@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { COMMON_FOODS } from '../data/commonFoods';
 import type { CommonFood } from '../data/commonFoods';
+import { BarcodeScanner } from './BarcodeScanner';
 
 interface AddItemFormProps {
   onSubmit: (item: {
@@ -20,6 +21,7 @@ interface AddItemFormProps {
     unit: string;
     notes?: string;
   };
+  isPremium?: boolean;
   className?: string;
 }
 
@@ -50,7 +52,7 @@ const formatDateShort = (dateStr: string) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-export function AddItemForm({ onSubmit, onCancel, initialItem, className = '' }: AddItemFormProps) {
+export function AddItemForm({ onSubmit, onCancel, initialItem, isPremium, className = '' }: AddItemFormProps) {
   const [name, setName] = useState(() => initialItem?.name || '');
   const [category, setCategory] = useState(() => {
     if (initialItem?.category) return initialItem.category;
@@ -63,6 +65,8 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, className = '' }:
   const [isExpanded, setIsExpanded] = useState(!!initialItem);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(!initialItem);
+  const [showScanner, setShowScanner] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
 
   const filteredFoods = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -93,6 +97,76 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, className = '' }:
     // When a category is tapped in search view, maybe we just set it and stay there?
     // Or filter search? For now let's just set it and expand the form.
     setShowSearchResults(false);
+  };
+
+  const handleScan = async (barcode: string) => {
+    setIsScanning(true);
+    setShowScanner(false);
+    
+    try {
+      const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
+      const data = await response.json();
+      
+      if (data.status === 1 && data.product) {
+        const product = data.product;
+        const productName = product.product_name || product.product_name_en || 'Unknown Product';
+        
+        // Map category
+        let mappedCategory = 'other';
+        const offCategories = product.categories_tags || [];
+        
+        if (offCategories.some((c: string) => c.includes('dairy'))) mappedCategory = 'dairy';
+        else if (offCategories.some((c: string) => c.includes('produce') || c.includes('fruit') || c.includes('vegetable'))) mappedCategory = 'produce';
+        else if (offCategories.some((c: string) => c.includes('meat') || c.includes('poultry'))) mappedCategory = 'meat';
+        else if (offCategories.some((c: string) => c.includes('seafood') || c.includes('fish'))) mappedCategory = 'seafood';
+        else if (offCategories.some((c: string) => c.includes('beverage') || c.includes('drink'))) mappedCategory = 'beverages';
+        else if (offCategories.some((c: string) => c.includes('grain') || c.includes('cereal') || c.includes('pasta') || c.includes('bread'))) mappedCategory = 'grains';
+        else if (offCategories.some((c: string) => c.includes('snack'))) mappedCategory = 'snacks';
+        else if (offCategories.some((c: string) => c.includes('frozen'))) mappedCategory = 'frozen';
+        else if (offCategories.some((c: string) => c.includes('condiment') || c.includes('sauce') || c.includes('spice'))) mappedCategory = 'condiments';
+        else if (offCategories.some((c: string) => c.includes('pantry') || c.includes('canned'))) mappedCategory = 'pantry';
+
+        setName(productName);
+        setCategory(mappedCategory);
+        
+        // Extract quantity/unit if possible
+        const offQuantity = product.quantity || '';
+        if (offQuantity) {
+          const match = offQuantity.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+          if (match) {
+            setQuantity(parseFloat(match[1]));
+            const unitMatch = match[2].toLowerCase();
+            if (UNITS.includes(unitMatch)) {
+              setUnit(unitMatch);
+            }
+          }
+        }
+
+        // Default shelf life for scanned items
+        setExpiryDate(getFutureDate(7));
+        setIsExpanded(true);
+        setShowSearchResults(false);
+      } else {
+        alert("Product not found. You can enter the details manually.");
+        setIsExpanded(true);
+        setShowSearchResults(false);
+      }
+    } catch (err) {
+      console.error("Error fetching product data:", err);
+      alert("Failed to fetch product data. Please enter manually.");
+      setIsExpanded(true);
+      setShowSearchResults(false);
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleStartScan = () => {
+    if (!isPremium) {
+      alert("👑 Barcode scanning is a Premium feature. Please upgrade to unlock!");
+      return;
+    }
+    setShowScanner(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -147,18 +221,30 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, className = '' }:
             <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
               Search Common Foods
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for Milk, Eggs, Spinach..."
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 pl-10 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
-                autoFocus
-              />
-              <svg className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+            <div className="relative flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search for Milk, Eggs, Spinach..."
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 pl-10 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                  autoFocus
+                />
+                <svg className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <button
+                type="button"
+                onClick={handleStartScan}
+                className="flex items-center justify-center rounded-lg bg-fresh-500 px-4 text-white shadow-sm hover:bg-fresh-600 transition-all active:scale-95"
+                title="Scan Barcode"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7a2 2 0 012-2h2m10 0h2a2 2 0 012 2M3 7h18M7 9v6m3-6v6m3-6v6m3-6v6m3-6v6" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -394,6 +480,24 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, className = '' }:
             )}
           </div>
         </form>
+      )}
+      {showScanner && (
+        <BarcodeScanner 
+          onScan={handleScan} 
+          onClose={() => setShowScanner(false)} 
+        />
+      )}
+
+      {isScanning && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-4">
+            <svg className="w-10 h-10 text-fresh-500 animate-spin" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="font-bold text-gray-800">Identifying product...</p>
+          </div>
+        </div>
       )}
     </div>
   );

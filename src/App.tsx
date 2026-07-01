@@ -784,7 +784,7 @@ export default function App() {
               <h3 className="text-base font-bold text-gray-800">{editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}</h3>
               <button onClick={handleCancelForm} className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
-            <AddItemForm onSubmit={handleSubmitForm} onCancel={handleCancelForm} initialItem={editingItem || undefined} className="border-none shadow-none !p-0 !bg-transparent" />
+            <AddItemForm onSubmit={handleSubmitForm} onCancel={handleCancelForm} initialItem={editingItem || undefined} isPremium={isPremium} className="border-none shadow-none !p-0 !bg-transparent" />
           </div>
         </div>
       )}
