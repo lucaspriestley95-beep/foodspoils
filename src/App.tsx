@@ -773,12 +773,13 @@ export default function App() {
 
       {showAddForm && (
         <div 
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs"
           onClick={(e) => {
             if (e.target === e.currentTarget) handleCancelForm();
           }}
+          onTouchMove={(e) => e.preventDefault()}
         >
-          <div className="w-full max-w-md bg-white rounded-t-3xl shadow-xl p-5 space-y-4 animate-slide-up relative max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-5 space-y-4 relative max-h-[90vh] overflow-y-auto mx-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-2">
               <h3 className="text-base font-bold text-gray-800">{editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}</h3>
               <button onClick={handleCancelForm} className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
