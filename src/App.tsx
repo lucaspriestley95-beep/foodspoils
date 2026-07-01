@@ -132,14 +132,7 @@ export default function App() {
 
   // Check URL query parameters for return
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('stripe_payment') === 'success') {
-      // Clean up URL query parameters
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-      
-      alert('👑 Thank you for your subscription! FoodSpoils Premium has been successfully unlocked. Enjoy unlimited pantry items, barcode scanning, and AI suggestions!');
-    }
+    // stripe_payment handler removed for security
   }, [user]);
 
   // Database Queries (Local Dexie)
