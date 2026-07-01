@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { RECIPES, type Recipe } from '../data/recipes';
 import { type FoodItem } from '../db';
 import { getExpiryStatus, StatusBadge } from './StatusBadge';

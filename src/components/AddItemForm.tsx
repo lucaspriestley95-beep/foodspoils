@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { COMMON_FOODS } from '../data/commonFoods';
 import type { CommonFood } from '../data/commonFoods';
 import { BarcodeScanner } from './BarcodeScanner';
@@ -8,7 +8,7 @@ interface AddItemFormProps {
   onSubmit: (item: {
     name: string;
     category: string;
-    expiryDate: string;
+    expiryDate: string | null;
     quantity: number;
     unit: string;
     notes?: string;
@@ -79,8 +79,6 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
   const [showScanner, setShowScanner] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   
-  const nameInputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     if (initialBarcode) {
       handleScan(initialBarcode);

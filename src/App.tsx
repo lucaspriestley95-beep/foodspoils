@@ -20,6 +20,7 @@ import {
   ProfileCustomization,
   AuthScreen,
   RecipeSuggestions,
+  BarcodeScanner,
   type ScreenKey
 } from './components';
 
@@ -355,26 +356,6 @@ export default function App() {
     }
   };
 
-  // Upgrading to Premium
-  const handleUpgradePremium = async (upgrade: boolean) => {
-    if (user) {
-      await supabase
-        .from('user_profiles')
-        .update({ is_premium: upgrade })
-        .eq('id', user.id);
-      fetchCloudData();
-    } else {
-      localStorage.setItem('foodspoils_is_premium', upgrade ? 'true' : 'false');
-      setIsPremium(upgrade);
-    }
-    
-    if (upgrade) {
-      alert('👑 Welcome to FoodSpoils Premium! You have unlocked unlimited items, barcode scanning, and AI suggestions.');
-    } else {
-      alert('Subscription cancelled. Reverted back to the Free Tier.');
-    }
-  };
-
   // Redirect to Stripe Secure Checkout
   const handleRedirectToStripe = (plan: 'monthly' | 'annual' | 'lifetime') => {
     window.open(STRIPE_LINKS[plan], '_blank');
@@ -634,7 +615,7 @@ export default function App() {
               <div className="space-y-4">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 min-h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
                   <BarcodeScanner 
-                    onScan={async (barcode) => {
+                    onScan={async (barcode: string) => {
                       setInitialBarcode(barcode);
                       setShowAddForm(true);
                     }} 
