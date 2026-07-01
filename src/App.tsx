@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type FoodItem } from './db';
-import { openCheckout } from './lib/stripe-links';
+import { 
   Plus, 
   Trash2, 
   Check, 
@@ -10,7 +10,6 @@ import { openCheckout } from './lib/stripe-links';
   ShieldCheck, 
   Calendar, 
   ChevronDown, 
-  ChevronUp, 
   Search, 
   RotateCcw,
   Sparkles,
@@ -776,20 +775,3 @@ export default function App() {
     </div>
   );
 }
-{/* Premium Section */}
-<div className="mt-6 rounded-md border border-gray-200 bg-white p-4 shadow-sm">
-  <h3 className="text-lg font-semibold text-gray-800">Upgrade to Premium</h3>
-  <p className="mt-1 text-sm text-gray-400">Unlimited items, barcode scanning, meal suggestions & more.</p>
-  <div className="mt-4 flex flex-col gap-3">
-    <button
-      onClick={() => openCheckout('monthly')}
-      className="w-full rounded-sm bg-fresh-500 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-fresh-600"
-    >
-      Monthly — $4.99/mo
-    </button>
-    <button
-      onClick={() => openCheckout('annual')}
-      className="w-full rounded-sm border border-fresh-500 bg-fresh-50 px-4 py-3 text-sm font-semibold text-fresh-700 transition-colors hover:bg-fresh-100"
-    >
-      Annual — $39.99/yr <span className="text-xs opacity-75">(Save 33%)</span>
-    </button>

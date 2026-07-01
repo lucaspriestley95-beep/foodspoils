@@ -22,4 +22,4 @@ export class FoodSpoilsDatabase extends Dexie {
   }
 }
 
-export const db = new FreshKeepDatabase();
+export const db = new FoodSpoilsDatabase();
