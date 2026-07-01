@@ -19,16 +19,24 @@ import {
   ReferralSection,
   ProfileCustomization,
   AuthScreen,
+  RecipeSuggestions,
   type ScreenKey
 } from './components';
 
 const CATEGORIES_INFO = [
+  { value: 'vegetables', label: 'Vegetables', icon: '🥦', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { value: 'fruits', label: 'Fruits', icon: '🍎', color: 'text-rose-500', bg: 'bg-rose-50' },
   { value: 'dairy', label: 'Dairy', icon: '🥛', color: 'text-amber-600', bg: 'bg-amber-50' },
-  { value: 'produce', label: 'Produce', icon: '🥬', color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { value: 'meat', label: 'Meat', icon: '🥩', color: 'text-rose-600', bg: 'bg-rose-50' },
   { value: 'seafood', label: 'Seafood', icon: '🐟', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-  { value: 'grains', label: 'Grains & Pasta', icon: '🌾', color: 'text-yellow-700', bg: 'bg-yellow-50' },
-  { value: 'condiments', label: 'Condiments', icon: '🧂', color: 'text-slate-600', bg: 'bg-slate-50' },
+  { value: 'deli', label: 'Deli', icon: '🥪', color: 'text-orange-700', bg: 'bg-orange-50' },
+  { value: 'grains', label: 'Grains & Bakery', icon: '🌾', color: 'text-yellow-700', bg: 'bg-yellow-50' },
+  { value: 'breakfast', label: 'Breakfast', icon: '🥣', color: 'text-purple-600', bg: 'bg-purple-50' },
+  { value: 'canned-goods', label: 'Canned Goods', icon: '🥫', color: 'text-gray-600', bg: 'bg-gray-100' },
+  { value: 'sauces-oils', label: 'Sauces & Oils', icon: '🏺', color: 'text-teal-600', bg: 'bg-teal-50' },
+  { value: 'spices-herbs', label: 'Spices & Herbs', icon: '🌿', color: 'text-green-700', bg: 'bg-green-50' },
+  { value: 'baking', label: 'Baking', icon: '🥯', color: 'text-amber-700', bg: 'bg-amber-50' },
+  { value: 'international', label: 'International', icon: '🏮', color: 'text-red-600', bg: 'bg-red-50' },
   { value: 'beverages', label: 'Beverages', icon: '🥤', color: 'text-blue-600', bg: 'bg-blue-50' },
   { value: 'frozen', label: 'Frozen', icon: '🧊', color: 'text-sky-500', bg: 'bg-sky-50' },
   { value: 'snacks', label: 'Snacks', icon: '🍿', color: 'text-orange-600', bg: 'bg-orange-50' },
@@ -50,15 +58,14 @@ export default function App() {
   // Adding / Editing form state
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
+  const [initialBarcode, setInitialBarcode] = useState<string | undefined>(undefined);
 
   // Supabase Data State
   const [cloudItems, setCloudItems] = useState<DbFoodItem[]>([]);
   const [cloudLoading, setCloudItemsLoading] = useState(false);
 
-  // Premium state (Local fallback + Cloud profile)
-  const [isPremium, setIsPremium] = useState(() => 
-    localStorage.getItem('foodspoils_is_premium') === 'true'
-  );
+  // Premium state (Supabase profile is source of truth)
+  const [isPremium, setIsPremium] = useState(false);
 
   // Body scroll lock when modal is open
   useEffect(() => {
@@ -108,7 +115,6 @@ export default function App() {
     
     if (profileData) {
       setIsPremium(profileData.is_premium);
-      localStorage.setItem('foodspoils_is_premium', profileData.is_premium ? 'true' : 'false');
     }
 
     // Fetch items
@@ -123,11 +129,10 @@ export default function App() {
     setCloudItemsLoading(false);
   };
 
-  // Check URL query parameters for successful payment simulation or return
+  // Check URL query parameters for return
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('stripe_payment') === 'success') {
-      handleUpgradePremium(true);
       // Clean up URL query parameters
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
@@ -182,7 +187,7 @@ export default function App() {
   const handleSubmitForm = async (formData: {
     name: string;
     category: string;
-    expiryDate: string;
+    expiryDate: string | null;
     quantity: number;
     unit: string;
     notes?: string;
@@ -261,6 +266,7 @@ export default function App() {
 
   const handleCancelForm = () => {
     setEditingItem(null);
+    setInitialBarcode(undefined);
     setShowAddForm(false);
   };
 
@@ -372,10 +378,6 @@ export default function App() {
   // Redirect to Stripe Secure Checkout
   const handleRedirectToStripe = (plan: 'monthly' | 'annual' | 'lifetime') => {
     window.open(STRIPE_LINKS[plan], '_blank');
-
-    if (confirm('🔒 Secure Stripe Checkout has been opened in a new tab!\n\nTo complete payment:\n1. Use any Stripe test card (e.g., 4242 4242...) in the checkout form.\n2. Or, click OK here to instantly simulate a successful subscription upgrade for local testing.')) {
-      handleUpgradePremium(true);
-    }
   };
 
   // Onboarding Screen Render
@@ -497,7 +499,19 @@ export default function App() {
         </div>
       )}
 
-      {/* 2. PANTRY SCREEN */}
+      {/* 2. RECIPE SUGGESTIONS SCREEN */}
+      {activeScreen === 'recipes' && (
+        <div className="animate-fade-in">
+          <Header title="Use It Up" subtitle="Cook before it spoils" />
+          <RecipeSuggestions 
+            activeItems={activeItems} 
+            isPremium={isPremium} 
+            onUpgrade={() => setActiveScreen('settings')} 
+          />
+        </div>
+      )}
+
+      {/* 3. PANTRY SCREEN */}
       {activeScreen === 'pantry' && (
         <div className="animate-fade-in">
           <Header title="Pantry" subtitle={user ? "Cloud Synced" : "Everything you have"} />
@@ -616,17 +630,38 @@ export default function App() {
         <div className="animate-fade-in">
           <Header title="Barcode Scanner" />
           <div className="px-4">
-            <ScanPrompt onScan={() => alert('📱 Barcode scanner requires Premium Subscription. Upgrade now under Profile tab!')} />
-            <div className="mt-4 rounded-md border border-yellow-200 bg-gradient-to-br from-amber-50 to-orange-50/30 p-5 shadow-sm text-sm space-y-4">
-              <h3 className="font-bold text-gray-800 flex items-center gap-1.5 text-base">👑 FoodSpoils Premium Benefits</h3>
-              <ul className="space-y-2.5 text-xs text-gray-600 font-medium">
-                <li className="flex items-start gap-2"><span>✅</span><span><strong>Instant Barcode Scanner</strong>: Skip manual entry entirely.</span></li>
-                <li className="flex items-start gap-2"><span>✅</span><span><strong>Cloud Sync</strong>: Access your pantry from any device.</span></li>
-                <li className="flex items-start gap-2"><span>✅</span><span><strong>Household Sharing</strong>: Sync pantry with up to 5 family members.</span></li>
-                <li className="flex items-start gap-2"><span>✅</span><span><strong>AI Recipes</strong>: Use ingredients before they expire.</span></li>
-              </ul>
-              <button onClick={() => setActiveScreen('settings')} className="w-full rounded-sm bg-coral-500 py-3 text-xs font-bold text-white hover:bg-coral-600 transition-colors shadow-sm">Go to Profile to Upgrade</button>
-            </div>
+            {isPremium ? (
+              <div className="space-y-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 min-h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
+                  <BarcodeScanner 
+                    onScan={async (barcode) => {
+                      setInitialBarcode(barcode);
+                      setShowAddForm(true);
+                    }} 
+                    onClose={() => setActiveScreen('dashboard')} 
+                  />
+                </div>
+                
+                <div className="rounded-md border border-fresh-100 bg-fresh-50/50 p-4 text-xs text-fresh-800">
+                  <p className="font-bold mb-1">Scanning Active</p>
+                  <p>Point your camera at a food barcode. It will be identified and added to your pantry instantly.</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <ScanPrompt onScan={() => {}} />
+                <div className="mt-4 rounded-md border border-yellow-200 bg-gradient-to-br from-amber-50 to-orange-50/30 p-5 shadow-sm text-sm space-y-4">
+                  <h3 className="font-bold text-gray-800 flex items-center gap-1.5 text-base">👑 FoodSpoils Premium Benefits</h3>
+                  <ul className="space-y-2.5 text-xs text-gray-600 font-medium">
+                    <li className="flex items-start gap-2"><span>✅</span><span><strong>Instant Barcode Scanner</strong>: Skip manual entry entirely.</span></li>
+                    <li className="flex items-start gap-2"><span>✅</span><span><strong>Cloud Sync</strong>: Access your pantry from any device.</span></li>
+                    <li className="flex items-start gap-2"><span>✅</span><span><strong>Household Sharing</strong>: Sync pantry with up to 5 family members.</span></li>
+                    <li className="flex items-start gap-2"><span>✅</span><span><strong>AI Recipes</strong>: Use ingredients before they expire.</span></li>
+                  </ul>
+                  <button onClick={() => setActiveScreen('settings')} className="w-full rounded-sm bg-coral-500 py-3 text-xs font-bold text-white hover:bg-coral-600 transition-colors shadow-sm">Go to Profile to Upgrade</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -677,7 +712,7 @@ export default function App() {
                         <span className="text-lg">{cat?.icon || '📋'}</span>
                         <div className="min-w-0">
                           <h4 className="font-semibold text-sm text-gray-800 truncate">{item.name}</h4>
-                          <p className="text-2xs text-gray-400">{item.quantity} {item.unit} · expired {item.expiryDate}</p>
+                          <p className="text-2xs text-gray-400">{item.quantity} {item.unit} · {item.expiryDate ? `expired ${item.expiryDate}` : 'no expiry'}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -750,7 +785,9 @@ export default function App() {
             )}
 
             {isPremium ? (
-              <button onClick={() => handleUpgradePremium(false)} className="w-full rounded-sm border border-red-200 bg-red-50 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors">Downgrade to Free Tier (Simulate)</button>
+              <div className="bg-green-50 border border-green-100 rounded p-3 text-xs text-green-700 font-medium">
+                ✨ Your premium subscription is active. Thank you for your support!
+              </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button onClick={() => handleRedirectToStripe('monthly')} className="rounded-sm bg-fresh-500 py-3 text-2xs font-bold text-white hover:bg-fresh-600 transition-colors text-center shadow-xs">Monthly ($4.99)</button>
@@ -784,13 +821,13 @@ export default function App() {
               <h3 className="text-base font-bold text-gray-800">{editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}</h3>
               <button onClick={handleCancelForm} className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
-            <AddItemForm onSubmit={handleSubmitForm} onCancel={handleCancelForm} initialItem={editingItem || undefined} isPremium={isPremium} className="border-none shadow-none !p-0 !bg-transparent" />
+            <AddItemForm onSubmit={handleSubmitForm} onCancel={handleCancelForm} initialItem={editingItem || undefined} initialBarcode={initialBarcode} isPremium={isPremium} className="border-none shadow-none !p-0 !bg-transparent" />
           </div>
         </div>
       )}
 
       {/* Floating Action Button */}
-      {!showAddForm && onboardingCompleted && (activeScreen === 'dashboard' || activeScreen === 'pantry' || activeScreen === 'list') && (
+      {!showAddForm && onboardingCompleted && (activeScreen === 'dashboard' || activeScreen === 'pantry' || activeScreen === 'list' || activeScreen === 'recipes') && (
         <button
           onClick={() => setShowAddForm(true)}
           className="fixed bottom-24 right-6 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-fresh-500 text-white shadow-lg shadow-fresh-500/40 transition-all hover:bg-fresh-600 hover:scale-110 active:scale-95"

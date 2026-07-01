@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { COMMON_FOODS } from '../data/commonFoods';
 import type { CommonFood } from '../data/commonFoods';
 import { BarcodeScanner } from './BarcodeScanner';
+import { fetchProductFromBarcode } from '../lib/openfoodfacts';
 
 interface AddItemFormProps {
   onSubmit: (item: {
@@ -16,22 +17,30 @@ interface AddItemFormProps {
   initialItem?: {
     name: string;
     category: string;
-    expiryDate: string;
+    expiryDate: string | null;
     quantity: number;
     unit: string;
     notes?: string;
   };
+  initialBarcode?: string;
   isPremium?: boolean;
   className?: string;
 }
 
 const CATEGORIES = [
+  { value: 'vegetables', label: 'Vegetables', icon: '🥦' },
+  { value: 'fruits', label: 'Fruits', icon: '🍎' },
   { value: 'dairy', label: 'Dairy', icon: '🥛' },
-  { value: 'produce', label: 'Produce', icon: '🥬' },
   { value: 'meat', label: 'Meat', icon: '🥩' },
   { value: 'seafood', label: 'Seafood', icon: '🐟' },
-  { value: 'grains', label: 'Grains & Pasta', icon: '🌾' },
-  { value: 'condiments', label: 'Condiments', icon: '🧂' },
+  { value: 'deli', label: 'Deli', icon: '🥪' },
+  { value: 'grains', label: 'Grains & Bakery', icon: '🌾' },
+  { value: 'breakfast', label: 'Breakfast', icon: '🥣' },
+  { value: 'canned-goods', label: 'Canned Goods', icon: '🥫' },
+  { value: 'sauces-oils', label: 'Sauces & Oils', icon: '🏺' },
+  { value: 'spices-herbs', label: 'Spices & Herbs', icon: '🌿' },
+  { value: 'baking', label: 'Baking', icon: '🥯' },
+  { value: 'international', label: 'International', icon: '🏮' },
   { value: 'beverages', label: 'Beverages', icon: '🥤' },
   { value: 'frozen', label: 'Frozen', icon: '🧊' },
   { value: 'snacks', label: 'Snacks', icon: '🍿' },
@@ -39,7 +48,7 @@ const CATEGORIES = [
   { value: 'other', label: 'Other', icon: '📋' },
 ];
 
-const UNITS = ['piece(s)', 'oz', 'lb', 'g', 'kg', 'cup', 'tbsp', 'tsp', 'fl oz', 'ml', 'L', 'box', 'can', 'jar', 'bunch', 'bag'];
+const UNITS = ['piece(s)', 'oz', 'lb', 'g', 'kg', 'cup', 'tbsp', 'tsp', 'fl oz', 'ml', 'L', 'box', 'can', 'jar', 'bunch', 'bag', 'pack', 'loaf', 'container', 'carton', 'gallon', 'pint'];
 
 const getFutureDate = (days: number) => {
   const date = new Date();
@@ -52,50 +61,63 @@ const formatDateShort = (dateStr: string) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-export function AddItemForm({ onSubmit, onCancel, initialItem, isPremium, className = '' }: AddItemFormProps) {
+export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, isPremium, className = '' }: AddItemFormProps) {
   const [name, setName] = useState(() => initialItem?.name || '');
   const [category, setCategory] = useState(() => {
     if (initialItem?.category) return initialItem.category;
     return localStorage.getItem('foodspoils_last_category') || 'produce';
   });
   const [expiryDate, setExpiryDate] = useState(() => initialItem?.expiryDate || getFutureDate(7));
+  const [noExpiry, setNoExpiry] = useState(() => initialItem?.expiryDate === null);
   const [quantity, setQuantity] = useState(() => initialItem?.quantity || 1);
   const [unit, setUnit] = useState(() => initialItem?.unit || 'piece(s)');
   const [notes, setNotes] = useState(() => initialItem?.notes || '');
-  const [isExpanded, setIsExpanded] = useState(!!initialItem);
+  const [isExpanded, setIsExpanded] = useState(!!initialItem || !!initialBarcode);
+  const [activeFood, setActiveFood] = useState<CommonFood | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchResults, setShowSearchResults] = useState(!initialItem);
+  const [showSearchResults, setShowSearchResults] = useState(!initialItem && !initialBarcode);
   const [showScanner, setShowScanner] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (initialBarcode) {
+      handleScan(initialBarcode);
+    }
+  }, [initialBarcode]);
 
   const filteredFoods = useMemo(() => {
-    if (!searchQuery.trim()) return [];
+    if (!searchQuery.length) return [];
     return COMMON_FOODS.filter(food => 
       food.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).slice(0, 6);
   }, [searchQuery]);
 
   const handleSelectFood = (food: CommonFood) => {
-    // Commit the item immediately for true "one-tap" entry
-    onSubmit({
-      name: food.name,
-      category: food.category,
-      expiryDate: getFutureDate(food.shelfLifeDays),
-      quantity: 1,
-      unit: 'piece(s)'
-    });
+    setName(food.name);
+    setCategory(food.category);
+    setExpiryDate(getFutureDate(food.shelfLifeDays));
     
-    // Reset state for next time
-    setSearchQuery('');
-    // We don't need to setShowSearchResults(false) because the modal will likely close,
-    // but if it doesn't, resetting to search view is good.
-    setShowSearchResults(true);
+    if (food.defaultQuantity) setQuantity(food.defaultQuantity);
+    if (food.defaultUnit) setUnit(food.defaultUnit);
+    
+    setActiveFood(food);
+    setIsExpanded(true);
+    setShowSearchResults(false);
   };
 
   const handleSelectCategory = (catValue: string) => {
     setCategory(catValue);
-    // When a category is tapped in search view, maybe we just set it and stay there?
-    // Or filter search? For now let's just set it and expand the form.
+    
+    // Auto-toggle no expiry for shelf-stable items
+    const shelfStable = ['beverages', 'canned-goods', 'sauces-oils', 'spices-herbs', 'baking', 'international', 'pantry'];
+    if (shelfStable.includes(catValue)) {
+      setNoExpiry(true);
+    } else {
+      setNoExpiry(false);
+    }
+
     setShowSearchResults(false);
   };
 
@@ -104,42 +126,20 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, isPremium, classN
     setShowScanner(false);
     
     try {
-      const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
-      const data = await response.json();
+      const product = await fetchProductFromBarcode(barcode);
       
-      if (data.status === 1 && data.product) {
-        const product = data.product;
-        const productName = product.product_name || product.product_name_en || 'Unknown Product';
+      if (product) {
+        setName(product.name);
+        setCategory(product.category);
+        setQuantity(product.quantity);
+        setUnit(product.unit);
         
-        // Map category
-        let mappedCategory = 'other';
-        const offCategories = product.categories_tags || [];
-        
-        if (offCategories.some((c: string) => c.includes('dairy'))) mappedCategory = 'dairy';
-        else if (offCategories.some((c: string) => c.includes('produce') || c.includes('fruit') || c.includes('vegetable'))) mappedCategory = 'produce';
-        else if (offCategories.some((c: string) => c.includes('meat') || c.includes('poultry'))) mappedCategory = 'meat';
-        else if (offCategories.some((c: string) => c.includes('seafood') || c.includes('fish'))) mappedCategory = 'seafood';
-        else if (offCategories.some((c: string) => c.includes('beverage') || c.includes('drink'))) mappedCategory = 'beverages';
-        else if (offCategories.some((c: string) => c.includes('grain') || c.includes('cereal') || c.includes('pasta') || c.includes('bread'))) mappedCategory = 'grains';
-        else if (offCategories.some((c: string) => c.includes('snack'))) mappedCategory = 'snacks';
-        else if (offCategories.some((c: string) => c.includes('frozen'))) mappedCategory = 'frozen';
-        else if (offCategories.some((c: string) => c.includes('condiment') || c.includes('sauce') || c.includes('spice'))) mappedCategory = 'condiments';
-        else if (offCategories.some((c: string) => c.includes('pantry') || c.includes('canned'))) mappedCategory = 'pantry';
-
-        setName(productName);
-        setCategory(mappedCategory);
-        
-        // Extract quantity/unit if possible
-        const offQuantity = product.quantity || '';
-        if (offQuantity) {
-          const match = offQuantity.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
-          if (match) {
-            setQuantity(parseFloat(match[1]));
-            const unitMatch = match[2].toLowerCase();
-            if (UNITS.includes(unitMatch)) {
-              setUnit(unitMatch);
-            }
-          }
+        // Auto-toggle no expiry for shelf-stable items
+        const shelfStable = ['beverages', 'canned-goods', 'sauces-oils', 'spices-herbs', 'baking', 'international', 'pantry'];
+        if (shelfStable.includes(product.category)) {
+          setNoExpiry(true);
+        } else {
+          setNoExpiry(false);
         }
 
         // Default shelf life for scanned items
@@ -147,13 +147,14 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, isPremium, classN
         setIsExpanded(true);
         setShowSearchResults(false);
       } else {
-        alert("Product not found. You can enter the details manually.");
+        // Smooth fallback
+        setName(`Scanned: ${barcode}`);
         setIsExpanded(true);
         setShowSearchResults(false);
       }
     } catch (err) {
       console.error("Error fetching product data:", err);
-      alert("Failed to fetch product data. Please enter manually.");
+      setName(`Scanned: ${barcode}`);
       setIsExpanded(true);
       setShowSearchResults(false);
     } finally {
@@ -178,7 +179,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, isPremium, classN
     onSubmit({ 
       name: name.trim(), 
       category, 
-      expiryDate, 
+      expiryDate: noExpiry ? null : expiryDate, 
       quantity, 
       unit, 
       notes: notes.trim() || undefined 
@@ -340,43 +341,61 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, isPremium, classN
 
           {/* Expiry Date & Quick Options */}
           <div>
-            <label htmlFor="item-expiry" className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
-              Expiry Date *
-            </label>
-            <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-2">
-                {quickExpiryOptions.map((opt) => (
-                  <button
-                    key={opt.label}
-                    type="button"
-                    onClick={() => handleQuickExpiry(opt.days)}
-                    className={`flex flex-col items-center justify-center rounded-lg border py-2 transition-all active:scale-95 ${
-                      expiryDate === getFutureDate(opt.days)
-                        ? 'border-fresh-500 bg-fresh-50 ring-1 ring-fresh-500'
-                        : 'border-gray-100 bg-white hover:bg-gray-50'
-                    }`}
-                  >
-                    <span className={`text-[10px] font-bold ${expiryDate === getFutureDate(opt.days) ? 'text-fresh-700' : 'text-gray-600'}`}>{opt.label}</span>
-                    <span className="text-[9px] text-gray-400">{formatDateShort(getFutureDate(opt.days))}</span>
-                  </button>
-                ))}
-              </div>
-              
-              <div className="relative">
+            <div className="flex justify-between items-end mb-1">
+              <label htmlFor="item-expiry" className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                Expiry Date *
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer group">
                 <input
-                  id="item-expiry"
-                  type="date"
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                  min={minDate}
-                  required
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                  type="checkbox"
+                  checked={noExpiry}
+                  onChange={(e) => setNoExpiry(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-gray-300 text-fresh-500 focus:ring-fresh-500"
                 />
-                <div className="absolute right-10 top-3 text-[10px] font-bold text-gray-400 pointer-events-none">
-                  Custom Date
+                <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-600 transition-colors">No expiry</span>
+              </label>
+            </div>
+            
+            {!noExpiry ? (
+              <div className="space-y-3 animate-fade-in">
+                <div className="grid grid-cols-3 gap-2">
+                  {quickExpiryOptions.map((opt) => (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      onClick={() => handleQuickExpiry(opt.days)}
+                      className={`flex flex-col items-center justify-center rounded-lg border py-2 transition-all active:scale-95 ${
+                        expiryDate === getFutureDate(opt.days)
+                          ? 'border-fresh-500 bg-fresh-50 ring-1 ring-fresh-500'
+                          : 'border-gray-100 bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className={`text-[10px] font-bold ${expiryDate === getFutureDate(opt.days) ? 'text-fresh-700' : 'text-gray-600'}`}>{opt.label}</span>
+                      <span className="text-[9px] text-gray-400">{formatDateShort(getFutureDate(opt.days))}</span>
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="relative">
+                  <input
+                    id="item-expiry"
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    min={minDate}
+                    required={!noExpiry}
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                  />
+                  <div className="absolute right-10 top-3 text-[10px] font-bold text-gray-400 pointer-events-none">
+                    Custom Date
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/50 p-4 text-center animate-fade-in">
+                <p className="text-xs text-gray-400 font-medium">This item is marked as non-perishable.</p>
+              </div>
+            )}
           </div>
 
           {/* Toggle More Details */}
@@ -458,6 +477,36 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, isPremium, classN
                   />
                 </div>
               </div>
+
+              {/* Smart Quantity Options */}
+              {activeFood?.quantityOptions && activeFood.quantityOptions.length > 0 && (
+                <div className="animate-fade-in">
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Quick Quantity
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {activeFood.quantityOptions.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => {
+                          const match = opt.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+                          if (match) {
+                            setQuantity(parseFloat(match[1]));
+                            // If there's a unit mentioned, try to match it
+                            const optUnit = match[2].trim().toLowerCase();
+                            const foundUnit = UNITS.find(u => optUnit.includes(u));
+                            if (foundUnit) setUnit(foundUnit);
+                          }
+                        }}
+                        className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 hover:border-fresh-500 hover:text-fresh-600 transition-all active:scale-95"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

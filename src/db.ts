@@ -4,7 +4,7 @@ export interface FoodItem {
   id?: number;
   name: string;
   category: string;
-  expiryDate: string; // YYYY-MM-DD
+  expiryDate: string | null; // YYYY-MM-DD or null for no expiry
   quantity: number;
   unit: string; // 'pcs', 'g', 'ml', 'bags', etc.
   notes?: string; // custom notes

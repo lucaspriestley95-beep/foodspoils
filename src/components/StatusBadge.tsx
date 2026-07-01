@@ -51,7 +51,8 @@ export function StatusBadge({ status, daysRemaining, className = '' }: StatusBad
   );
 }
 
-export function getExpiryStatus(expiryDate: string): Status {
+export function getExpiryStatus(expiryDate: string | null | undefined): Status {
+  if (!expiryDate) return 'fresh';
   const now = new Date();
   const expiry = new Date(expiryDate);
   const diffMs = expiry.getTime() - now.getTime();
@@ -63,7 +64,8 @@ export function getExpiryStatus(expiryDate: string): Status {
   return 'fresh';
 }
 
-export function getDaysRemaining(expiryDate: string): number {
+export function getDaysRemaining(expiryDate: string | null | undefined): number | undefined {
+  if (!expiryDate) return undefined;
   const now = new Date();
   const expiry = new Date(expiryDate);
   const diffMs = expiry.getTime() - now.getTime();

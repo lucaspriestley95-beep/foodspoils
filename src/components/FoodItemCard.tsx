@@ -52,7 +52,7 @@ export function FoodItemCard({ item, onDelete, onEdit, onConsume, onWaste, class
     <div
       className={`relative animate-fade-in rounded-md border border-gray-200 bg-white border-l-4 ${statusBorderColors[status] || 'border-l-gray-300'} shadow-sm transition-shadow hover:shadow-md ${className}`}
       role="listitem"
-      aria-label={`${item.name}, expires ${item.expiryDate}`}
+      aria-label={`${item.name}, ${item.expiryDate ? `expires ${item.expiryDate}` : 'no expiry'}`}
     >
       <div className="flex items-center gap-3 p-4">
         {/* Category Icon */}

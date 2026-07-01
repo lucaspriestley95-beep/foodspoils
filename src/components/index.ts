@@ -13,3 +13,4 @@ export { ReferralSection } from './ReferralSection';
 export { ProfileCustomization } from './ProfileCustomization';
 export { AuthScreen } from './AuthScreen';
 export { BarcodeScanner } from './BarcodeScanner';
+export { RecipeSuggestions } from './RecipeSuggestions';
