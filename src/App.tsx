@@ -350,7 +350,7 @@ export default function App() {
   };
 
   // Redirect to Stripe Secure Checkout
-  const handleRedirectToStripe = (plan: 'monthly' | 'annual' | 'lifetime') => {
+  const handleRedirectToStripe = (plan: 'monthly' | 'annual') => {
     window.open(STRIPE_LINKS[plan], '_blank');
   };
 
@@ -766,7 +766,6 @@ export default function App() {
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button onClick={() => handleRedirectToStripe('monthly')} className="rounded-sm bg-fresh-500 py-3 text-2xs font-bold text-white hover:bg-fresh-600 transition-colors text-center shadow-xs">Monthly ($4.99)</button>
                 <button onClick={() => handleRedirectToStripe('annual')} className="relative rounded-sm bg-coral-500 py-3 text-2xs font-bold text-white hover:bg-coral-600 transition-colors text-center shadow-xs">Annual ($39.99 - Save 33%)<span className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] text-white font-extrabold shadow-sm animate-pulse">Save</span></button>
-                <button onClick={() => handleRedirectToStripe('lifetime')} className="col-span-2 rounded-sm bg-indigo-600 py-3 text-2xs font-bold text-white hover:bg-indigo-700 transition-colors text-center shadow-xs">Lifetime Access ($99.99)</button>
               </div>
             )}
           </div>

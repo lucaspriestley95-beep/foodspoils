@@ -87,9 +87,16 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
 
   const filteredFoods = useMemo(() => {
     if (!searchQuery.length) return [];
-    return COMMON_FOODS.filter(food => 
-      food.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 6);
+    
+    const query = searchQuery.toLowerCase();
+    const startsWithMatches = COMMON_FOODS.filter(food => 
+      food.name.toLowerCase().startsWith(query)
+    );
+    const containsMatches = COMMON_FOODS.filter(food => 
+      food.name.toLowerCase().includes(query) && !food.name.toLowerCase().startsWith(query)
+    );
+    
+    return [...startsWithMatches, ...containsMatches].slice(0, 6);
   }, [searchQuery]);
 
   const handleSelectFood = (food: CommonFood) => {
