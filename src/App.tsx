@@ -366,6 +366,31 @@ export default function App() {
     );
   }
 
+  // Pro Tips
+  const PRO_TIPS = [
+    "Keep berries fresh! Rinse them in a mix of 1 part vinegar and 3 parts water before storing.",
+    "Avocados ripening too fast? Put them in the fridge to pause the ripening process.",
+    "Wrap banana stems in plastic wrap to keep them yellow longer.",
+    "Store tomatoes at room temperature. The fridge ruins their flavor and texture!",
+    "Treat fresh herbs like flowers. Snip the stems and put them in a glass of water in the fridge.",
+    "Hard cheese lasts longer if you wrap it in parchment paper, not plastic.",
+    "Keep bread fresh by storing it in a bread box or freezing it. The fridge makes it stale faster.",
+    "Store eggs in their original carton on a shelf inside the fridge, not on the door.",
+    "Keep potatoes in a cool, dark, dry place away from onions (they make each other sprout!).",
+    "Store onions in a cool, dark, dry place. A pantyhose works great for hanging them!",
+    "Revive wilted lettuce by soaking it in ice water for 10-15 minutes.",
+    "Keep milk on a shelf inside the fridge, not the door where the temperature fluctuates.",
+    "Store mushrooms in a brown paper bag in the fridge to absorb moisture and keep them firm.",
+    "Garlic loves cool, dry, dark places with good air circulation.",
+    "Apples produce ethylene gas that ripens other fruits. Store them away from other produce!"
+  ];
+  
+  const [currentTip, setCurrentTip] = useState(PRO_TIPS[0]);
+
+  useEffect(() => {
+    setCurrentTip(PRO_TIPS[Math.floor(Math.random() * PRO_TIPS.length)]);
+  }, []);
+
   // Filter pantry items
   const filteredActiveItems = activeItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -399,7 +424,7 @@ export default function App() {
   const dollarsSaved = totalConsumed * 4.5;
 
   return (
-    <div className="relative mx-auto min-h-screen max-w-md bg-gray-50 pb-24 font-sans shadow-sm border-x border-gray-100">
+    <div className="mx-auto min-h-screen max-w-md bg-gray-50 font-sans shadow-sm border-x border-gray-100">
       
       {/* 1. DASHBOARD SCREEN */}
       {activeScreen === 'dashboard' && (
@@ -464,9 +489,9 @@ export default function App() {
           <div className="mx-4 mb-4 flex gap-3 rounded-md border border-green-100 bg-green-50 p-4 text-xs text-green-800">
             <span className="text-xl" aria-hidden="true">💡</span>
             <div className="space-y-1">
-              <p className="font-bold text-green-900">Pro Tip: Keep berries fresh!</p>
+              <p className="font-bold text-green-900">Pro Tip</p>
               <p className="leading-relaxed">
-                Rinse berries in a mix of 1 part vinegar and 3 parts water before storing. It kills mold spores and extends their life!
+                {currentTip}
               </p>
             </div>
           </div>
