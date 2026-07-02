@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,6 +8,7 @@ export function ProfileCustomization() {
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -33,12 +34,34 @@ export function ProfileCustomization() {
     }
   };
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      setMessage({ type: 'error', text: 'Image must be smaller than 2MB' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setAvatarUrl(base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
 
     try {
+      // First check if avatar_url column exists by trying to select it
+      // If it doesn't exist, we'll get an error, but we're ignoring it for the update
+      // Supabase handles this gracefully by just not updating missing columns if we use upsert
+      // But we know avatar_url might be large if base64, so we need to be careful
+      
       const { error } = await supabase
         .from('user_profiles')
         .update({
@@ -47,7 +70,23 @@ export function ProfileCustomization() {
         })
         .eq('id', user?.id);
 
-      if (error) throw error;
+      if (error) {
+        // If there's an error, it might be because avatar_url doesn't exist in schema
+        if (error.message.includes('avatar_url')) {
+           // Fallback to just updating display name
+           const { error: fallbackError } = await supabase
+            .from('user_profiles')
+            .update({
+              display_name: displayName,
+            })
+            .eq('id', user?.id);
+            
+           if (fallbackError) throw fallbackError;
+           throw new Error('Name saved, but database does not support profile photos yet. (Requires avatar_url column)');
+        }
+        throw error;
+      }
+      
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       
       // Clear message after 3 seconds
@@ -72,7 +111,7 @@ export function ProfileCustomization() {
 
       <form onSubmit={handleUpdateProfile} className="space-y-4">
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-fresh-50 border-2 border-fresh-100 flex-shrink-0 overflow-hidden flex items-center justify-center text-2xl shadow-inner">
+          <div className="h-16 w-16 rounded-full bg-fresh-50 border-2 border-fresh-100 flex-shrink-0 overflow-hidden flex items-center justify-center text-2xl shadow-inner relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
             {avatarUrl ? (
               <img 
                 src={avatarUrl} 
@@ -88,6 +127,9 @@ export function ProfileCustomization() {
                 {displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
               </span>
             )}
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-white text-[10px] font-bold">Edit</span>
+            </div>
           </div>
           <div className="flex-1 space-y-1">
             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
@@ -105,15 +147,32 @@ export function ProfileCustomization() {
 
         <div className="space-y-1">
           <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-            Avatar URL
+            Profile Photo
           </label>
           <input
-            type="url"
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            placeholder="https://example.com/photo.jpg"
-            className="w-full rounded-sm border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500 outline-none transition-all"
+            type="file"
+            accept="image/*"
+            id="avatar-upload"
+            ref={fileInputRef}
+            onChange={handlePhotoUpload}
+            className="hidden"
           />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full flex items-center justify-center gap-2 rounded-sm border border-gray-200 bg-white py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+          >
+            <span>📷</span> Choose Photo
+          </button>
+          {avatarUrl && (
+            <button
+              type="button"
+              onClick={() => setAvatarUrl('')}
+              className="w-full text-center text-[10px] text-red-500 hover:underline mt-1"
+            >
+              Remove Photo
+            </button>
+          )}
         </div>
 
         {message && (
