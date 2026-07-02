@@ -424,7 +424,7 @@ export default function App() {
   const dollarsSaved = totalConsumed * 4.5;
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-gray-50 font-sans shadow-sm border-x border-gray-100">
+    <div className="mx-auto min-h-screen max-w-md bg-gray-50 pb-24 font-sans shadow-sm border-x border-gray-100">
       
       {/* 1. DASHBOARD SCREEN */}
       {activeScreen === 'dashboard' && (
