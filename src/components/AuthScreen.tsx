@@ -45,15 +45,15 @@ export function AuthScreen({ onSuccess, initialMode = 'login' }: AuthScreenProps
 
   return (
     <div className="flex flex-col items-center justify-center p-6 min-h-[400px] animate-fade-in">
-      <div className="w-full max-w-sm space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+      <div className="w-full max-w-sm space-y-8 bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700">
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-fresh-50 text-3xl mb-4">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-fresh-950/30 text-3xl mb-4">
             {mode === 'signup' ? '🌱' : mode === 'login' ? '🔐' : '🔑'}
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900">
+          <h2 className="text-2xl font-extrabold text-gray-100">
             {mode === 'signup' ? 'Create Account' : mode === 'login' ? 'Welcome Back' : 'Reset Password'}
           </h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-400">
             {mode === 'signup' 
               ? 'Join FoodSpoils to sync your pantry across devices.' 
               : mode === 'login' 
@@ -76,7 +76,7 @@ export function AuthScreen({ onSuccess, initialMode = 'login' }: AuthScreenProps
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="relative block w-full rounded-sm border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:z-10 focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500 outline-none transition-all"
+                className="relative block w-full rounded-sm border border-gray-700 bg-gray-900 px-3 py-3 text-sm text-gray-100 placeholder-gray-400 focus:z-10 focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500 outline-none transition-all"
                 placeholder="you@example.com"
               />
             </div>
@@ -93,7 +93,7 @@ export function AuthScreen({ onSuccess, initialMode = 'login' }: AuthScreenProps
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="relative block w-full rounded-sm border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:z-10 focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500 outline-none transition-all"
+                  className="relative block w-full rounded-sm border border-gray-700 bg-gray-900 px-3 py-3 text-sm text-gray-100 placeholder-gray-400 focus:z-10 focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500 outline-none transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -101,13 +101,13 @@ export function AuthScreen({ onSuccess, initialMode = 'login' }: AuthScreenProps
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-50 p-3 text-xs text-red-600 font-medium border border-red-100 animate-shake">
+            <div className="rounded-md bg-red-950/30 p-3 text-xs text-red-600 font-medium border border-red-900/50 animate-shake">
               {error}
             </div>
           )}
 
           {message && (
-            <div className="rounded-md bg-green-50 p-3 text-xs text-green-600 font-medium border border-green-100">
+            <div className="rounded-md bg-green-950/30 p-3 text-xs text-green-600 font-medium border border-green-900/50">
               {message}
             </div>
           )}
@@ -139,14 +139,14 @@ export function AuthScreen({ onSuccess, initialMode = 'login' }: AuthScreenProps
             <>
               <button
                 onClick={() => setMode('signup')}
-                className="text-xs font-semibold text-fresh-600 hover:text-fresh-500"
+                className="text-xs font-semibold text-fresh-400 hover:text-fresh-500"
               >
                 Don't have an account? Sign Up
               </button>
               <br />
               <button
                 onClick={() => setMode('reset')}
-                className="text-xs font-semibold text-gray-400 hover:text-gray-500"
+                className="text-xs font-semibold text-gray-400 hover:text-gray-400"
               >
                 Forgot your password?
               </button>
@@ -154,7 +154,7 @@ export function AuthScreen({ onSuccess, initialMode = 'login' }: AuthScreenProps
           ) : (
             <button
               onClick={() => setMode('login')}
-              className="text-xs font-semibold text-fresh-600 hover:text-fresh-500"
+              className="text-xs font-semibold text-fresh-400 hover:text-fresh-500"
             >
               Already have an account? Sign In
             </button>

@@ -72,7 +72,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
         </div>
         <button 
           onClick={onClose}
-          className="p-2.5 bg-white/10 text-white hover:bg-white/20 rounded-full transition-colors"
+          className="p-2.5 bg-gray-800/10 text-white hover:bg-gray-800/20 rounded-full transition-colors"
           aria-label="Close scanner"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

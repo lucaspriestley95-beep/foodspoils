@@ -29,18 +29,18 @@ export function ReferralSection() {
   };
 
   return (
-    <div className="mx-4 mb-4 rounded-md border border-fresh-100 bg-white p-4 shadow-sm space-y-3">
+    <div className="mx-4 mb-4 rounded-md border border-fresh-900/50 bg-gray-800 p-4 shadow-sm space-y-3">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-fresh-50 text-xl" aria-hidden="true">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-fresh-950/30 text-xl" aria-hidden="true">
           📢
         </div>
         <div>
-          <h3 className="text-sm font-bold text-gray-800">Invite Friends</h3>
-          <p className="text-xs text-gray-500">Help others reduce food waste!</p>
+          <h3 className="text-sm font-bold text-gray-100">Invite Friends</h3>
+          <p className="text-xs text-gray-400">Help others reduce food waste!</p>
         </div>
       </div>
       
-      <p className="text-xs text-gray-600 leading-relaxed">
+      <p className="text-xs text-gray-300 leading-relaxed">
         Share FoodSpoils with your friends and family. Every item saved is money kept in your pocket!
       </p>
 
@@ -48,7 +48,7 @@ export function ReferralSection() {
         onClick={handleShare}
         className={`w-full flex items-center justify-center gap-2 rounded-sm py-2.5 text-xs font-bold transition-all ${
           copied 
-            ? 'bg-fresh-100 text-fresh-700 border border-fresh-200' 
+            ? 'bg-fresh-100 text-fresh-400 border border-fresh-200' 
             : 'bg-fresh-500 text-white hover:bg-fresh-600 shadow-sm'
         }`}
       >
@@ -63,7 +63,7 @@ export function ReferralSection() {
       </button>
       
       <div className="pt-1 text-center">
-        <span className="text-[10px] text-gray-400 font-medium">Use code: <span className="text-gray-600 font-bold">FRESH2026</span></span>
+        <span className="text-[10px] text-gray-400 font-medium">Use code: <span className="text-gray-300 font-bold">FRESH2026</span></span>
       </div>
     </div>
   );

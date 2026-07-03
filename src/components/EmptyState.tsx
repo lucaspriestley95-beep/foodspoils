@@ -18,7 +18,7 @@ export function EmptyState({ icon, title, description, action, className = '' }:
       role="status"
     >
       {/* Illustration */}
-      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-fresh-50" aria-hidden="true">
+      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-fresh-950/30" aria-hidden="true">
         {icon || (
           <svg className="h-12 w-12 text-fresh-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -27,7 +27,7 @@ export function EmptyState({ icon, title, description, action, className = '' }:
       </div>
 
       {/* Text */}
-      <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+      <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
       <p className="mt-2 max-w-xs text-sm text-gray-400">{description}</p>
 
       {/* Action */}

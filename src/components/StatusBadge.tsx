@@ -10,7 +10,7 @@ const statusConfig: Record<Status, { label: string; bg: string; text: string; do
   fresh: {
     label: 'Fresh',
     bg: 'bg-green-100',
-    text: 'text-green-700',
+    text: 'text-green-400',
     dot: 'bg-status-fresh',
   },
   soon: {
@@ -28,7 +28,7 @@ const statusConfig: Record<Status, { label: string; bg: string; text: string; do
   expired: {
     label: 'Expired',
     bg: 'bg-red-100',
-    text: 'text-red-700',
+    text: 'text-red-400',
     dot: 'bg-status-expired',
   },
 };
