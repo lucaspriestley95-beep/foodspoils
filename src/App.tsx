@@ -187,8 +187,8 @@ export default function App() {
     notes?: string;
   }) => {
     // Check active item limit for Free Tier
-    if (!isPremium && activeItems.length >= 10 && !editingItem) {
-      if (confirm('⚠️ Free Tier Limit Reached!\n\nAs a Free user, you can track up to 10 active items. Would you like to upgrade to Premium for unlimited items?')) {
+    if (!isPremium && activeItems.length >= 15 && !editingItem) {
+      if (confirm('⚠️ Free Tier Limit Reached!\n\nAs a Free user, you can track up to 15 active items. Would you like to upgrade to Premium for unlimited items?')) {
         handleRedirectToStripe('monthly');
       }
       return;
@@ -439,7 +439,7 @@ export default function App() {
           {!isPremium && (
             <div className="mx-4 mb-3 rounded-md bg-amber-50 border border-amber-100 p-2.5 text-center text-xs text-amber-800 font-semibold flex items-center justify-center gap-1.5 shadow-sm">
               <span className="text-sm">⚡</span>
-              <span>Free Tier Capacity: <strong>{activeItems.length}/10 items</strong> used.</span>
+              <span>Free Tier Capacity: <strong>{activeItems.length}/15 items</strong> used.</span>
               <button 
                 onClick={() => { setActiveScreen('settings'); }} 
                 className="underline text-amber-900 hover:text-amber-950 font-bold ml-1"
@@ -778,8 +778,8 @@ export default function App() {
 
             {!isPremium && (
               <div className="space-y-1.5">
-                <div className="flex justify-between text-2xs font-medium text-gray-400"><span>Pantry Capacity Usage</span><span>{activeItems.length} / 10 items</span></div>
-                <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden"><div className={`h-full transition-all duration-300 ${activeItems.length >= 9 ? 'bg-red-500' : 'bg-fresh-500'}`} style={{ width: `${Math.min(100, (activeItems.length / 10) * 100)}%` }} /></div>
+                <div className="flex justify-between text-2xs font-medium text-gray-400"><span>Pantry Capacity Usage</span><span>{activeItems.length} / 15 items</span></div>
+                <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden"><div className={`h-full transition-all duration-300 ${activeItems.length >= 14 ? 'bg-red-500' : 'bg-fresh-500'}`} style={{ width: `${Math.min(100, (activeItems.length / 15) * 100)}%` }} /></div>
               </div>
             )}
 
