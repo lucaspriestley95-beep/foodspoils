@@ -21,6 +21,7 @@ import {
   AuthScreen,
   RecipeSuggestions,
   BarcodeScanner,
+  CategoryIcon,
   type ScreenKey
 } from './components';
 
