@@ -761,7 +761,7 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <AuthScreen onSuccess={() => {}} />
+              <AuthScreen onSuccess={() => {}} initialMode="signup" />
             )}
           </div>
 
@@ -787,10 +787,14 @@ export default function App() {
               <div className="bg-green-950/30 border border-green-900/50 rounded p-3 text-xs text-green-400 font-medium">
                 ✨ Your premium subscription is active. Thank you for your support!
               </div>
-            ) : (
+            ) : user ? (
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button onClick={() => handleRedirectToStripe('monthly')} className="rounded-sm bg-fresh-500 py-3 text-2xs font-bold text-white hover:bg-fresh-600 transition-colors text-center shadow-xs">Monthly ($4.99)</button>
                 <button onClick={() => handleRedirectToStripe('annual')} className="relative rounded-sm bg-coral-500 py-3 text-2xs font-bold text-white hover:bg-coral-600 transition-colors text-center shadow-xs">Annual ($39.99 - Save 33%)<span className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] text-white font-extrabold shadow-sm animate-pulse">Save</span></button>
+              </div>
+            ) : (
+              <div className="rounded-md bg-fresh-950/30 border border-fresh-900/50 p-3 text-xs text-fresh-400 font-medium text-center">
+                🌱 Create a free account above to unlock Premium features
               </div>
             )}
           </div>
