@@ -18,7 +18,7 @@ export function Header({ title, subtitle, onScan, onMenu, className = '' }: Head
         </div>
 
         <div>
-          <h1 className="text-lg font-bold text-gray-800">{title}</h1>
+          <h1 className="text-lg font-bold text-gray-100">{title}</h1>
           {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
         </div>
       </div>
@@ -28,7 +28,7 @@ export function Header({ title, subtitle, onScan, onMenu, className = '' }: Head
         {onScan && (
           <button
             onClick={onScan}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-fresh-50 hover:text-fresh-500"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-fresh-950/30 hover:text-fresh-500"
             aria-label="Scan barcode"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -41,7 +41,7 @@ export function Header({ title, subtitle, onScan, onMenu, className = '' }: Head
         {onMenu && (
           <button
             onClick={onMenu}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-700/50 hover:text-gray-300"
             aria-label="Menu"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -73,9 +73,9 @@ export function WelcomeHeader({ userName = 'there', itemCount, className = '' }:
   return (
     <div className={`px-4 pt-2 pb-4 ${className}`}>
       <p className="text-sm text-gray-400">{greeting()},</p>
-      <h1 className="text-2xl font-bold text-gray-800">{userName} 👋</h1>
+      <h1 className="text-2xl font-bold text-gray-100">{userName} 👋</h1>
       <p className="mt-1 text-sm text-gray-400">
-        You have <span className="font-semibold text-fresh-600">{itemCount} items</span> in your pantry
+        You have <span className="font-semibold text-fresh-400">{itemCount} items</span> in your pantry
       </p>
     </div>
   );

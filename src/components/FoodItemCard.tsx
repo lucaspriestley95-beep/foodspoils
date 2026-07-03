@@ -50,24 +50,24 @@ export function FoodItemCard({ item, onDelete, onEdit, onConsume, onWaste, class
 
   return (
     <div
-      className={`relative animate-fade-in rounded-md border border-gray-200 bg-white border-l-4 ${statusBorderColors[status] || 'border-l-gray-300'} shadow-sm transition-shadow hover:shadow-md ${className}`}
+      className={`relative animate-fade-in rounded-md border border-gray-700 bg-gray-800 border-l-4 ${statusBorderColors[status] || 'border-l-gray-300'} shadow-sm transition-shadow hover:shadow-md ${className}`}
       role="listitem"
       aria-label={`${item.name}, ${item.expiryDate ? `expires ${item.expiryDate}` : 'no expiry'}`}
     >
       <div className="flex items-center gap-3 p-4">
         {/* Category Icon */}
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-fresh-50 text-lg" aria-hidden="true">
+        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-fresh-950/30 text-lg" aria-hidden="true">
           {icon}
         </span>
 
         {/* Item Details */}
         <div className="flex-1 min-w-0">
-          <h3 className="truncate text-base font-semibold text-gray-800">{item.name}</h3>
+          <h3 className="truncate text-base font-semibold text-gray-100">{item.name}</h3>
           <p className="mt-0.5 text-sm text-gray-400">
             {item.quantity} {item.unit} · {item.category}
           </p>
           {item.notes && (
-            <p className="mt-1 text-xs italic text-gray-500 truncate" title={item.notes}>
+            <p className="mt-1 text-xs italic text-gray-400 truncate" title={item.notes}>
               "{item.notes}"
             </p>
           )}
@@ -81,7 +81,7 @@ export function FoodItemCard({ item, onDelete, onEdit, onConsume, onWaste, class
           {onConsume && item.id !== undefined && (
             <button
               onClick={() => onConsume(item.id!)}
-              className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-green-50 hover:text-green-600 active:bg-green-100"
+              className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-green-950/30 hover:text-green-600 active:bg-green-100"
               aria-label={`Consume ${item.name}`}
               title="Ate it!"
             >
@@ -105,7 +105,7 @@ export function FoodItemCard({ item, onDelete, onEdit, onConsume, onWaste, class
           {onEdit && (
             <button
               onClick={() => onEdit(item)}
-              className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:bg-gray-200"
+              className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-700/50 hover:text-gray-300 active:bg-gray-200"
               aria-label={`Edit ${item.name}`}
               title="Edit item"
             >
@@ -117,7 +117,7 @@ export function FoodItemCard({ item, onDelete, onEdit, onConsume, onWaste, class
           {onDelete && item.id !== undefined && (
             <button
               onClick={() => onDelete(item.id!)}
-              className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 active:bg-red-100"
+              className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-red-950/30 hover:text-red-500 active:bg-red-100"
               aria-label={`Delete ${item.name}`}
               title="Delete item"
             >

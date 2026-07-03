@@ -48,6 +48,6 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-gray-50);
-  color: var(--color-gray-800);
+  background-color: #111827; /* bg-gray-900 */
+  color: #F3F4F6; /* text-gray-100 */
 }

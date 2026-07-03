@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
     label: 'Scan',
     icon: (active) => (
       <div className={`-mt-5 flex h-14 w-14 items-center justify-center rounded-full transition-colors ${
-        active ? 'bg-fresh-500 text-white shadow-lg shadow-fresh-500/30' : 'bg-fresh-50 text-fresh-500'
+        active ? 'bg-fresh-500 text-white shadow-lg shadow-fresh-500/30' : 'bg-fresh-950/30 text-fresh-500'
       }`}>
         <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5zM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" />
@@ -78,7 +78,7 @@ const navItems: NavItem[] = [
 export function BottomNav({ activeScreen, onNavigate, className = '' }: BottomNavProps) {
   return (
     <nav
-      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur-lg safe-area-bottom ${className}`}
+      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-gray-700 bg-gray-800/95 backdrop-blur-lg safe-area-bottom ${className}`}
       role="navigation"
       aria-label="Main navigation"
     >
@@ -90,7 +90,7 @@ export function BottomNav({ activeScreen, onNavigate, className = '' }: BottomNa
               key={item.key}
               onClick={() => onNavigate(item.key)}
               className={`relative flex min-w-0 flex-col items-center gap-0.5 px-1 transition-colors ${
-                isActive ? 'text-fresh-600' : 'text-gray-400 hover:text-gray-600'
+                isActive ? 'text-fresh-400' : 'text-gray-400 hover:text-gray-300'
               }`}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}

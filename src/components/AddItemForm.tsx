@@ -234,7 +234,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for Milk, Eggs, Spinach..."
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 pl-10 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                  className="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 pl-10 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
                   autoFocus
                 />
                 <svg className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -260,24 +260,24 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                 <button
                   key={food.name}
                   onClick={() => handleSelectFood(food)}
-                  className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3 text-left hover:border-fresh-200 hover:bg-fresh-50 transition-all active:scale-[0.98]"
+                  className="flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800 p-3 text-left hover:border-fresh-200 hover:bg-fresh-950/30 transition-all active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-lg">{CATEGORIES.find(c => c.value === food.category)?.icon || '📦'}</span>
                     <div>
-                      <div className="text-sm font-bold text-gray-800">{food.name}</div>
+                      <div className="text-sm font-bold text-gray-100">{food.name}</div>
                       <div className="text-[10px] text-gray-400 uppercase tracking-tight">{food.category}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-bold text-fresh-600">+{food.shelfLifeDays} days</div>
+                    <div className="text-xs font-bold text-fresh-400">+{food.shelfLifeDays} days</div>
                     <div className="text-[10px] text-gray-400">Typical</div>
                   </div>
                 </button>
               ))}
               <button 
                 onClick={() => { setName(searchQuery); setShowSearchResults(false); }}
-                className="p-2 text-center text-xs font-semibold text-gray-500 hover:text-fresh-600"
+                className="p-2 text-center text-xs font-semibold text-gray-400 hover:text-fresh-400"
               >
                 Can't find it? Use "{searchQuery}" manually
               </button>
@@ -293,17 +293,17 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                     key={cat.value}
                     type="button"
                     onClick={() => handleSelectCategory(cat.value)}
-                    className="flex flex-col items-center gap-1 rounded-lg border border-gray-100 bg-white py-3 text-[10px] transition-all hover:bg-fresh-50 active:scale-95"
+                    className="flex flex-col items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 py-3 text-[10px] transition-all hover:bg-fresh-950/30 active:scale-95"
                   >
                     <span className="text-xl">{cat.icon}</span>
-                    <span className="font-semibold text-gray-600">{cat.label}</span>
+                    <span className="font-semibold text-gray-300">{cat.label}</span>
                   </button>
                 ))}
               </div>
             </div>
           ) : (
              <div className="py-8 text-center">
-                <p className="text-sm text-gray-500 mb-4">No exact matches for "{searchQuery}"</p>
+                <p className="text-sm text-gray-400 mb-4">No exact matches for "{searchQuery}"</p>
                 <button 
                   onClick={() => { setName(searchQuery); setShowSearchResults(false); }}
                   className="rounded-full bg-fresh-500 px-6 py-2 text-sm font-bold text-white shadow-sm hover:bg-fresh-600 transition-all"
@@ -327,7 +327,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                 <button 
                   type="button" 
                   onClick={() => setShowSearchResults(true)}
-                  className="text-[10px] font-bold text-fresh-600 hover:underline"
+                  className="text-[10px] font-bold text-fresh-400 hover:underline"
                 >
                   Back to Search
                 </button>
@@ -340,7 +340,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Baby spinach, Milk..."
               required
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+              className="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
             />
           </div>
 
@@ -357,7 +357,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                   onChange={(e) => setNoExpiry(e.target.checked)}
                   className="w-3.5 h-3.5 rounded border-gray-300 text-fresh-500 focus:ring-fresh-500"
                 />
-                <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-600 transition-colors">No expiry</span>
+                <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-300 transition-colors">No expiry</span>
               </label>
             </div>
             
@@ -371,11 +371,11 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                       onClick={() => handleQuickExpiry(opt.days)}
                       className={`flex flex-col items-center justify-center rounded-lg border py-2 transition-all active:scale-95 ${
                         expiryDate === getFutureDate(opt.days)
-                          ? 'border-fresh-500 bg-fresh-50 ring-1 ring-fresh-500'
-                          : 'border-gray-100 bg-white hover:bg-gray-50'
+                          ? 'border-fresh-500 bg-fresh-950/30 ring-1 ring-fresh-500'
+                          : 'border-gray-700 bg-gray-800 hover:bg-gray-900'
                       }`}
                     >
-                      <span className={`text-[10px] font-bold ${expiryDate === getFutureDate(opt.days) ? 'text-fresh-700' : 'text-gray-600'}`}>{opt.label}</span>
+                      <span className={`text-[10px] font-bold ${expiryDate === getFutureDate(opt.days) ? 'text-fresh-400' : 'text-gray-300'}`}>{opt.label}</span>
                       <span className="text-[9px] text-gray-400">{formatDateShort(getFutureDate(opt.days))}</span>
                     </button>
                   ))}
@@ -389,7 +389,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                     onChange={(e) => setExpiryDate(e.target.value)}
                     min={minDate}
                     required={!noExpiry}
-                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                    className="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
                   />
                   <div className="absolute right-10 top-3 text-[10px] font-bold text-gray-400 pointer-events-none">
                     Custom Date
@@ -397,7 +397,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                 </div>
               </div>
             ) : (
-              <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/50 p-4 text-center animate-fade-in">
+              <div className="rounded-lg border border-dashed border-gray-700 bg-gray-900/50 p-4 text-center animate-fade-in">
                 <p className="text-xs text-gray-400 font-medium">This item is marked as non-perishable.</p>
               </div>
             )}
@@ -407,7 +407,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex w-full items-center justify-between py-1 text-xs font-bold text-fresh-600 hover:text-fresh-700 transition-colors"
+            className="flex w-full items-center justify-between py-1 text-xs font-bold text-fresh-400 hover:text-fresh-400 transition-colors"
           >
             <span>{isExpanded ? 'Collapse Details' : 'Adjust Category, Qty, Notes'}</span>
             <svg className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -430,8 +430,8 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                       onClick={() => setCategory(cat.value)}
                       className={`flex flex-col items-center gap-1 rounded-lg border py-2 text-[10px] transition-all ${
                         category === cat.value
-                          ? 'bg-fresh-50 border-fresh-200 text-fresh-700 font-bold'
-                          : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'
+                          ? 'bg-fresh-950/30 border-fresh-200 text-fresh-400 font-bold'
+                          : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-900'
                       }`}
                     >
                       <span className="text-base">{cat.icon}</span>
@@ -454,12 +454,12 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                       min={1}
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                      className="w-16 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
                     />
                     <select
                       value={unit}
                       onChange={(e) => setUnit(e.target.value)}
-                      className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-2 text-sm text-gray-800 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                      className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-2 py-2 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
                     >
                       {UNITS.map((u) => (
                         <option key={u} value={u}>{u}</option>
@@ -478,7 +478,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="e.g. For salad"
-                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder-gray-400 outline-none transition-all focus:border-fresh-500 focus:bg-white focus:ring-1 focus:ring-fresh-500"
+                    className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder-gray-400 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
                   />
                 </div>
               </div>
@@ -504,7 +504,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                             if (foundUnit) setUnit(foundUnit);
                           }
                         }}
-                        className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 hover:border-fresh-500 hover:text-fresh-600 transition-all active:scale-95"
+                        className="rounded-full border border-gray-700 bg-gray-800 px-3 py-1 text-xs font-medium text-gray-300 hover:border-fresh-500 hover:text-fresh-400 transition-all active:scale-95"
                       >
                         {opt}
                       </button>
@@ -527,7 +527,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
               <button
                 type="button"
                 onClick={onCancel}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-4 text-sm font-bold text-gray-500 transition-all hover:bg-gray-50 active:bg-gray-100"
+                className="rounded-xl border border-gray-700 bg-gray-800 px-4 py-4 text-sm font-bold text-gray-400 transition-all hover:bg-gray-900 active:bg-gray-700/40"
               >
                 Cancel
               </button>
@@ -544,12 +544,12 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
 
       {isScanning && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-4">
+          <div className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col items-center gap-4">
             <svg className="w-10 h-10 text-fresh-500 animate-spin" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p className="font-bold text-gray-800">Identifying product...</p>
+            <p className="font-bold text-gray-100">Identifying product...</p>
           </div>
         </div>
       )}

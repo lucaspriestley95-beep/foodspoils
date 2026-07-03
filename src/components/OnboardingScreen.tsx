@@ -42,7 +42,7 @@ export function OnboardingScreen({ onComplete }: { onComplete?: () => void }) {
   const isLast = currentStep === steps.length - 1;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-white font-sans">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-gray-800 font-sans">
       {/* Top progress dots */}
       <div className="flex justify-center gap-2 pt-12 pb-8">
         {steps.map((_, i) => (
@@ -58,10 +58,10 @@ export function OnboardingScreen({ onComplete }: { onComplete?: () => void }) {
       {/* Illustration area */}
       <div className="flex flex-1 items-center justify-center px-8">
         <div className="flex flex-col items-center text-center animate-fade-in">
-          <div className="mb-8 flex h-48 w-48 items-center justify-center rounded-full bg-fresh-50">
+          <div className="mb-8 flex h-48 w-48 items-center justify-center rounded-full bg-fresh-950/30">
             {step.illustration}
           </div>
-          <h2 className="text-2xl font-bold text-gray-800">{step.title}</h2>
+          <h2 className="text-2xl font-bold text-gray-100">{step.title}</h2>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-gray-400">{step.description}</p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export function OnboardingScreen({ onComplete }: { onComplete?: () => void }) {
         {!isLast && (
           <button
             onClick={onComplete}
-            className="mt-3 w-full py-3 text-sm font-medium text-gray-400 transition-colors hover:text-gray-600 min-h-touch"
+            className="mt-3 w-full py-3 text-sm font-medium text-gray-400 transition-colors hover:text-gray-300 min-h-touch"
           >
             Skip
           </button>

@@ -27,17 +27,17 @@ import {
 const CATEGORIES_INFO = [
   { value: 'vegetables', label: 'Vegetables', icon: '🥦', color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { value: 'fruits', label: 'Fruits', icon: '🍎', color: 'text-rose-500', bg: 'bg-rose-50' },
-  { value: 'dairy', label: 'Dairy', icon: '🥛', color: 'text-amber-600', bg: 'bg-amber-50' },
+  { value: 'dairy', label: 'Dairy', icon: '🥛', color: 'text-amber-600', bg: 'bg-amber-950/30' },
   { value: 'meat', label: 'Meat', icon: '🥩', color: 'text-rose-600', bg: 'bg-rose-50' },
   { value: 'seafood', label: 'Seafood', icon: '🐟', color: 'text-cyan-600', bg: 'bg-cyan-50' },
   { value: 'deli', label: 'Deli', icon: '🥪', color: 'text-orange-700', bg: 'bg-orange-50' },
   { value: 'grains', label: 'Grains & Bakery', icon: '🌾', color: 'text-yellow-700', bg: 'bg-yellow-50' },
   { value: 'breakfast', label: 'Breakfast', icon: '🥣', color: 'text-purple-600', bg: 'bg-purple-50' },
-  { value: 'canned-goods', label: 'Canned Goods', icon: '🥫', color: 'text-gray-600', bg: 'bg-gray-100' },
+  { value: 'canned-goods', label: 'Canned Goods', icon: '🥫', color: 'text-gray-300', bg: 'bg-gray-100' },
   { value: 'sauces-oils', label: 'Sauces & Oils', icon: '🏺', color: 'text-teal-600', bg: 'bg-teal-50' },
-  { value: 'spices-herbs', label: 'Spices & Herbs', icon: '🌿', color: 'text-green-700', bg: 'bg-green-50' },
-  { value: 'baking', label: 'Baking', icon: '🥯', color: 'text-amber-700', bg: 'bg-amber-50' },
-  { value: 'international', label: 'International', icon: '🏮', color: 'text-red-600', bg: 'bg-red-50' },
+  { value: 'spices-herbs', label: 'Spices & Herbs', icon: '🌿', color: 'text-green-400', bg: 'bg-green-950/30' },
+  { value: 'baking', label: 'Baking', icon: '🥯', color: 'text-amber-700', bg: 'bg-amber-950/30' },
+  { value: 'international', label: 'International', icon: '🏮', color: 'text-red-600', bg: 'bg-red-950/30' },
   { value: 'beverages', label: 'Beverages', icon: '🥤', color: 'text-blue-600', bg: 'bg-blue-50' },
   { value: 'frozen', label: 'Frozen', icon: '🧊', color: 'text-sky-500', bg: 'bg-sky-50' },
   { value: 'snacks', label: 'Snacks', icon: '🍿', color: 'text-orange-600', bg: 'bg-orange-50' },
@@ -424,7 +424,7 @@ export default function App() {
   const dollarsSaved = totalConsumed * 4.5;
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-gray-50 pb-24 font-sans shadow-sm border-x border-gray-100">
+    <div className="mx-auto min-h-screen max-w-md bg-gray-900 pb-24 font-sans shadow-sm border-x border-gray-700">
       
       {/* 1. DASHBOARD SCREEN */}
       {activeScreen === 'dashboard' && (
@@ -437,12 +437,12 @@ export default function App() {
           <WelcomeHeader userName={user?.email?.split('@')[0] || "Alex"} itemCount={activeItems.length} />
           
           {!isPremium && (
-            <div className="mx-4 mb-3 rounded-md bg-amber-50 border border-amber-100 p-2.5 text-center text-xs text-amber-800 font-semibold flex items-center justify-center gap-1.5 shadow-sm">
+            <div className="mx-4 mb-3 rounded-md bg-amber-950/30 border border-amber-900/50 p-2.5 text-center text-xs text-amber-400 font-semibold flex items-center justify-center gap-1.5 shadow-sm">
               <span className="text-sm">⚡</span>
               <span>Free Tier Capacity: <strong>{activeItems.length}/15 items</strong> used.</span>
               <button 
                 onClick={() => { setActiveScreen('settings'); }} 
-                className="underline text-amber-900 hover:text-amber-950 font-bold ml-1"
+                className="underline text-amber-300 hover:text-amber-950 font-bold ml-1"
               >
                 Upgrade to Premium
               </button>
@@ -467,7 +467,7 @@ export default function App() {
           </div>
 
           <div className="px-4 pb-4">
-            <h2 className="mb-2 text-sm font-semibold text-gray-800">⚠️ Eat These First!</h2>
+            <h2 className="mb-2 text-sm font-semibold text-gray-100">⚠️ Eat These First!</h2>
             {expiringSoon.length === 0 ? (
               <NoExpiringItems />
             ) : (
@@ -486,7 +486,7 @@ export default function App() {
             )}
           </div>
 
-          <div className="mx-4 mb-4 flex gap-3 rounded-md border border-green-100 bg-green-50 p-4 text-xs text-green-800">
+          <div className="mx-4 mb-4 flex gap-3 rounded-md border border-green-900/50 bg-green-950/30 p-4 text-xs text-green-800">
             <span className="text-xl" aria-hidden="true">💡</span>
             <div className="space-y-1">
               <p className="font-bold text-green-900">Pro Tip</p>
@@ -517,7 +517,7 @@ export default function App() {
           
           <div className="px-4 pb-3">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-800">📋 Inventory</h2>
+              <h2 className="text-sm font-semibold text-gray-100">📋 Inventory</h2>
             </div>
 
             <div className="relative mb-3">
@@ -531,7 +531,7 @@ export default function App() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search pantry items..."
-                className="w-full rounded-sm border border-gray-200 bg-white py-2 pl-9 pr-4 text-sm text-gray-800 placeholder-gray-400 outline-none transition-colors focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500"
+                className="w-full rounded-sm border border-gray-700 bg-gray-800 py-2 pl-9 pr-4 text-sm text-gray-100 placeholder-gray-400 outline-none transition-colors focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500"
               />
             </div>
 
@@ -539,7 +539,7 @@ export default function App() {
               <button
                 onClick={() => setFilterCategory('All')}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors ${
-                  filterCategory === 'All' ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                  filterCategory === 'All' ? 'bg-gray-800 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-900'
                 }`}
               >
                 All ({activeItems.length})
@@ -547,7 +547,7 @@ export default function App() {
               <button
                 onClick={() => setFilterCategory('Expiring Soon')}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                  filterCategory === 'Expiring Soon' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                  filterCategory === 'Expiring Soon' ? 'bg-yellow-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-900'
                 }`}
               >
                 ⚠️ Expiring Soon
@@ -555,7 +555,7 @@ export default function App() {
               <button
                 onClick={() => setFilterCategory('Expired')}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                  filterCategory === 'Expired' ? 'bg-red-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                  filterCategory === 'Expired' ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-900'
                 }`}
               >
                 🛑 Expired
@@ -568,7 +568,7 @@ export default function App() {
                     key={cat.value}
                     onClick={() => setFilterCategory(cat.value)}
                     className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                      filterCategory === cat.value ? 'bg-fresh-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                      filterCategory === cat.value ? 'bg-fresh-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-900'
                     }`}
                   >
                     <span>{cat.icon}</span>
@@ -594,7 +594,7 @@ export default function App() {
                   if (items.length === 0) return null;
                   const isCollapsed = collapsedCategories[cat.value];
                   return (
-                    <div key={cat.value} className="rounded-md border border-gray-200 bg-white overflow-hidden shadow-sm">
+                    <div key={cat.value} className="rounded-md border border-gray-700 bg-gray-800 overflow-hidden shadow-sm">
                       <button
                         onClick={() => setCollapsedCategories(prev => ({ ...prev, [cat.value]: !prev[cat.value] }))}
                         className={`flex w-full items-center justify-between p-3 text-left font-semibold text-sm ${cat.bg} ${cat.color}`}
@@ -602,14 +602,14 @@ export default function App() {
                         <div className="flex items-center gap-1.5">
                           <span className="text-base" aria-hidden="true">{cat.icon}</span>
                           <span>{cat.label}</span>
-                          <span className="rounded-full bg-white/80 px-2 py-0.5 text-2xs font-bold text-gray-700 shadow-sm">{items.length}</span>
+                          <span className="rounded-full bg-gray-800/80 px-2 py-0.5 text-2xs font-bold text-gray-300 shadow-sm">{items.length}</span>
                         </div>
                         <svg className={`h-4 w-4 transform transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
                       {!isCollapsed && (
-                        <div className="flex flex-col gap-2 p-3 bg-gray-50/30">
+                        <div className="flex flex-col gap-2 p-3 bg-gray-900/30">
                           {items.map(item => (
                             <FoodItemCard key={item.id} item={item} onEdit={handleStartEdit} onDelete={handleDeleteItem} onConsume={handleConsumeItem} onWaste={handleWasteItem} />
                           ))}
@@ -631,7 +631,7 @@ export default function App() {
           <div className="px-4">
             {isPremium ? (
               <div className="space-y-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 min-h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="bg-gray-800 rounded-2xl shadow-sm border border-gray-700 p-4 min-h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
                   <BarcodeScanner 
                     onScan={async (barcode: string) => {
                       setInitialBarcode(barcode);
@@ -641,7 +641,7 @@ export default function App() {
                   />
                 </div>
                 
-                <div className="rounded-md border border-fresh-100 bg-fresh-50/50 p-4 text-xs text-fresh-800">
+                <div className="rounded-md border border-fresh-900/50 bg-fresh-950/20 p-4 text-xs text-fresh-400">
                   <p className="font-bold mb-1">Scanning Active</p>
                   <p>Point your camera at a food barcode. It will be identified and added to your pantry instantly.</p>
                 </div>
@@ -650,8 +650,8 @@ export default function App() {
               <>
                 <ScanPrompt onScan={() => {}} />
                 <div className="mt-4 rounded-md border border-yellow-200 bg-gradient-to-br from-amber-50 to-orange-50/30 p-5 shadow-sm text-sm space-y-4">
-                  <h3 className="font-bold text-gray-800 flex items-center gap-1.5 text-base">👑 FoodSpoils Premium Benefits</h3>
-                  <ul className="space-y-2.5 text-xs text-gray-600 font-medium">
+                  <h3 className="font-bold text-gray-100 flex items-center gap-1.5 text-base">👑 FoodSpoils Premium Benefits</h3>
+                  <ul className="space-y-2.5 text-xs text-gray-300 font-medium">
                     <li className="flex items-start gap-2"><span>✅</span><span><strong>Instant Barcode Scanner</strong>: Skip manual entry entirely.</span></li>
                     <li className="flex items-start gap-2"><span>✅</span><span><strong>Cloud Sync</strong>: Access your pantry from any device.</span></li>
                     <li className="flex items-start gap-2"><span>✅</span><span><strong>Household Sharing</strong>: Sync pantry with up to 5 family members.</span></li>
@@ -670,19 +670,19 @@ export default function App() {
         <div className="animate-fade-in">
           <Header title="Waste Report" subtitle="Analyze household statistics" />
           <div className="px-4 pb-4">
-            <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-4">
-              <h3 className="text-sm font-semibold text-gray-800">📈 Household Impact Overview</h3>
+            <div className="rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-4">
+              <h3 className="text-sm font-semibold text-gray-100">📈 Household Impact Overview</h3>
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-md bg-green-50/50 border border-green-100 p-3 text-center">
+                <div className="rounded-md bg-green-950/30/50 border border-green-900/50 p-3 text-center">
                   <span className="text-2xl">😋</span>
                   <p className="mt-1 text-2xs uppercase tracking-wider text-gray-400 font-semibold">Consumed</p>
-                  <p className="mt-0.5 text-lg font-bold text-green-700">{totalConsumed} items</p>
+                  <p className="mt-0.5 text-lg font-bold text-green-400">{totalConsumed} items</p>
                   <p className="text-[10px] text-gray-400">Est. Saved: ${dollarsSaved.toFixed(2)}</p>
                 </div>
-                <div className="rounded-md bg-red-50/50 border border-red-100 p-3 text-center">
+                <div className="rounded-md bg-red-950/30/50 border border-red-900/50 p-3 text-center">
                   <span className="text-2xl">🗑️</span>
                   <p className="mt-1 text-2xs uppercase tracking-wider text-gray-400 font-semibold">Wasted</p>
-                  <p className="mt-0.5 text-lg font-bold text-red-700">{totalWasted} items</p>
+                  <p className="mt-0.5 text-lg font-bold text-red-400">{totalWasted} items</p>
                   <p className="text-[10px] text-gray-400">Est. Loss: ${dollarsWasted.toFixed(2)}</p>
                 </div>
               </div>
@@ -690,33 +690,33 @@ export default function App() {
                 <p className="text-center text-xs text-gray-400 py-2">Complete items to generate stats.</p>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-medium text-gray-600"><span>Eaten: {100 - wasteRate}%</span><span>Wasted: {wasteRate}%</span></div>
+                  <div className="flex justify-between text-xs font-medium text-gray-300"><span>Eaten: {100 - wasteRate}%</span><span>Wasted: {wasteRate}%</span></div>
                   <div className="h-2 w-full rounded-full bg-red-200 overflow-hidden"><div className="h-full bg-green-500" style={{ width: `${100 - wasteRate}%` }} /></div>
                 </div>
               )}
             </div>
           </div>
           <div className="px-4 pb-4">
-            <h3 className="mb-2 text-sm font-semibold text-gray-800">🕒 Activity Log</h3>
+            <h3 className="mb-2 text-sm font-semibold text-gray-100">🕒 Activity Log</h3>
             {historyItems.length === 0 ? (
-              <div className="rounded-md border border-gray-200 bg-white p-8 text-center text-gray-400 text-xs">No archived items yet.</div>
+              <div className="rounded-md border border-gray-700 bg-gray-800 p-8 text-center text-gray-400 text-xs">No archived items yet.</div>
             ) : (
-              <div className="rounded-md border border-gray-200 bg-white overflow-hidden shadow-sm divide-y divide-gray-100">
+              <div className="rounded-md border border-gray-700 bg-gray-800 overflow-hidden shadow-sm divide-y divide-gray-700">
                 {[...historyItems].reverse().map(item => {
                   const cat = CATEGORIES_INFO.find(c => c.value === item.category);
                   const isConsumed = item.status === 'consumed';
                   return (
-                    <div key={item.id} className="flex items-center justify-between p-3.5 hover:bg-gray-50/50 transition-colors">
+                    <div key={item.id} className="flex items-center justify-between p-3.5 hover:bg-gray-900/50 transition-colors">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="text-lg">{cat?.icon || '📋'}</span>
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-sm text-gray-800 truncate">{item.name}</h4>
+                          <h4 className="font-semibold text-sm text-gray-100 truncate">{item.name}</h4>
                           <p className="text-2xs text-gray-400">{item.quantity} {item.unit} · {item.expiryDate ? `expired ${item.expiryDate}` : 'no expiry'}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <span className={`rounded px-2 py-0.5 text-2xs font-bold ${isConsumed ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>{isConsumed ? 'Consumed' : 'Wasted'}</span>
-                        <button onClick={() => handleRestoreItem(item.id)} className="p-1.5 text-gray-300 hover:text-gray-600 transition-colors" title="Restore item to Pantry"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" /></svg></button>
+                        <span className={`rounded px-2 py-0.5 text-2xs font-bold ${isConsumed ? 'bg-green-950/30 text-green-400 border border-green-900/50' : 'bg-red-950/30 text-red-400 border border-red-900/50'}`}>{isConsumed ? 'Consumed' : 'Wasted'}</span>
+                        <button onClick={() => handleRestoreItem(item.id)} className="p-1.5 text-gray-300 hover:text-gray-300 transition-colors" title="Restore item to Pantry"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" /></svg></button>
                       </div>
                     </div>
                   );
@@ -737,8 +737,8 @@ export default function App() {
           {user && <ProfileCustomization />}
 
           {/* User Account Section */}
-          <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-4">
-            <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+          <div className="mx-4 mb-4 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-4">
+            <h3 className="text-sm font-semibold text-gray-100 flex items-center gap-1.5">
               <svg className="h-4 w-4 text-fresh-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
@@ -748,7 +748,7 @@ export default function App() {
             {user ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600 font-medium">{user.email}</p>
+                  <p className="text-sm text-gray-300 font-medium">{user.email}</p>
                   <button 
                     onClick={signOut}
                     className="text-xs font-bold text-coral-500 hover:text-coral-600 underline"
@@ -756,7 +756,7 @@ export default function App() {
                     Sign Out
                   </button>
                 </div>
-                <div className="bg-fresh-50 rounded p-2 text-[10px] text-fresh-700 font-medium">
+                <div className="bg-fresh-950/30 rounded p-2 text-[10px] text-fresh-400 font-medium">
                   ☁️ Cloud Sync Active
                 </div>
               </div>
@@ -765,15 +765,15 @@ export default function App() {
             )}
           </div>
 
-          <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-3.5">
+          <div className="mx-4 mb-4 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-3.5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xs uppercase tracking-wider text-gray-400 font-bold">Current Plan</p>
-                <h3 className="text-base font-bold text-gray-800 flex items-center gap-1">
+                <h3 className="text-base font-bold text-gray-100 flex items-center gap-1">
                   {isPremium ? <><span className="text-fresh-500">👑</span> FoodSpoils Premium</> : 'FoodSpoils Free'}
                 </h3>
               </div>
-              <span className={`rounded-full px-2.5 py-0.5 text-2xs font-bold ${isPremium ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{isPremium ? 'Unlimited' : 'Basic Tier'}</span>
+              <span className={`rounded-full px-2.5 py-0.5 text-2xs font-bold ${isPremium ? 'bg-green-100 text-green-400' : 'bg-gray-100 text-gray-300'}`}>{isPremium ? 'Unlimited' : 'Basic Tier'}</span>
             </div>
 
             {!isPremium && (
@@ -784,7 +784,7 @@ export default function App() {
             )}
 
             {isPremium ? (
-              <div className="bg-green-50 border border-green-100 rounded p-3 text-xs text-green-700 font-medium">
+              <div className="bg-green-950/30 border border-green-900/50 rounded p-3 text-xs text-green-400 font-medium">
                 ✨ Your premium subscription is active. Thank you for your support!
               </div>
             ) : (
@@ -795,11 +795,11 @@ export default function App() {
             )}
           </div>
 
-          <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-3">
-            <h3 className="text-sm font-semibold text-gray-800">🛠️ Developer Tools</h3>
+          <div className="mx-4 mb-4 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-3">
+            <h3 className="text-sm font-semibold text-gray-100">🛠️ Developer Tools</h3>
             <div className="space-y-2">
-              <button onClick={handleSeedSampleData} className="w-full flex items-center justify-center gap-2 rounded-sm border border-gray-200 bg-white py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors min-h-touch"><span>🌱</span> Seed Sample Grocery Data</button>
-              <button onClick={handleClearDatabase} className="w-full flex items-center justify-center gap-2 rounded-sm border border-red-100 bg-white py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors min-h-touch"><span>🗑️</span> Reset Database (Clear All)</button>
+              <button onClick={handleSeedSampleData} className="w-full flex items-center justify-center gap-2 rounded-sm border border-gray-700 bg-gray-800 py-2.5 text-xs font-semibold text-gray-300 hover:bg-gray-900 active:bg-gray-700/40 transition-colors min-h-touch"><span>🌱</span> Seed Sample Grocery Data</button>
+              <button onClick={handleClearDatabase} className="w-full flex items-center justify-center gap-2 rounded-sm border border-red-900/50 bg-gray-800 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-950/30 active:bg-red-100 transition-colors min-h-touch"><span>🗑️</span> Reset Database (Clear All)</button>
             </div>
           </div>
           <div className="mx-4 text-center space-y-1"><p className="text-2xs text-gray-400 font-semibold">FoodSpoils App v1.2.0 · Supabase Ready</p></div>
@@ -814,10 +814,10 @@ export default function App() {
           }}
           onTouchMove={(e) => e.preventDefault()}
         >
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-5 space-y-4 relative max-h-[90vh] overflow-y-auto mx-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-              <h3 className="text-base font-bold text-gray-800">{editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}</h3>
-              <button onClick={handleCancelForm} className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+          <div className="w-full max-w-md bg-gray-800 rounded-3xl shadow-xl p-5 space-y-4 relative max-h-[90vh] overflow-y-auto mx-4">
+            <div className="flex items-center justify-between border-b border-gray-700 pb-2">
+              <h3 className="text-base font-bold text-gray-100">{editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}</h3>
+              <button onClick={handleCancelForm} className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-300 transition-colors" aria-label="Close"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
             <AddItemForm onSubmit={handleSubmitForm} onCancel={handleCancelForm} initialItem={editingItem || undefined} initialBarcode={initialBarcode} isPremium={isPremium} className="border-none shadow-none !p-0 !bg-transparent" />
           </div>

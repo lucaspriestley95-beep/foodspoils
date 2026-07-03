@@ -101,8 +101,8 @@ export function ProfileCustomization() {
   if (!user) return null;
 
   return (
-    <div className="mx-4 mb-4 rounded-md border border-gray-200 bg-white p-4 shadow-sm space-y-4 animate-fade-in">
-      <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+    <div className="mx-4 mb-4 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-4 animate-fade-in">
+      <h3 className="text-sm font-semibold text-gray-100 flex items-center gap-1.5">
         <svg className="h-4 w-4 text-fresh-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -111,7 +111,7 @@ export function ProfileCustomization() {
 
       <form onSubmit={handleUpdateProfile} className="space-y-4">
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-fresh-50 border-2 border-fresh-100 flex-shrink-0 overflow-hidden flex items-center justify-center text-2xl shadow-inner relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+          <div className="h-16 w-16 rounded-full bg-fresh-950/30 border-2 border-fresh-900/50 flex-shrink-0 overflow-hidden flex items-center justify-center text-2xl shadow-inner relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
             {avatarUrl ? (
               <img 
                 src={avatarUrl} 
@@ -123,7 +123,7 @@ export function ProfileCustomization() {
                 }} 
               />
             ) : (
-              <span className="text-fresh-600 font-bold">
+              <span className="text-fresh-400 font-bold">
                 {displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
               </span>
             )}
@@ -140,7 +140,7 @@ export function ProfileCustomization() {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your Name"
-              className="w-full rounded-sm border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500 outline-none transition-all"
+              className="w-full rounded-sm border border-gray-700 bg-gray-900 px-3 py-2 text-sm focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500 outline-none transition-all"
             />
           </div>
         </div>
@@ -160,7 +160,7 @@ export function ProfileCustomization() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-full flex items-center justify-center gap-2 rounded-sm border border-gray-200 bg-white py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            className="w-full flex items-center justify-center gap-2 rounded-sm border border-gray-700 bg-gray-800 py-2 text-xs font-semibold text-gray-300 hover:bg-gray-900 active:bg-gray-700/40 transition-colors"
           >
             <span>📷</span> Choose Photo
           </button>
@@ -178,8 +178,8 @@ export function ProfileCustomization() {
         {message && (
           <div className={`text-xs p-2 rounded-sm border ${
             message.type === 'success' 
-              ? 'bg-green-50 text-green-700 border-green-100' 
-              : 'bg-red-50 text-red-700 border-red-100'
+              ? 'bg-green-950/30 text-green-400 border-green-900/50' 
+              : 'bg-red-950/30 text-red-400 border-red-900/50'
           } animate-shake`}>
             {message.text}
           </div>
