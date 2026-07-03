@@ -46,6 +46,7 @@ export function FoodItemCard({ item, onDelete, onEdit, onConsume, onWaste, class
     soon: 'border-l-status-soon',
     urgent: 'border-l-status-urgent',
     expired: 'border-l-status-expired',
+    'non-perishable': 'border-l-gray-400',
   };
 
   return (

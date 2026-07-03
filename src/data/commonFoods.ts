@@ -38,8 +38,8 @@ export const COMMON_FOODS: CommonFood[] = [
   { name: 'Squash (Butternut)', category: 'vegetables', shelfLifeDays: 30, defaultQuantity: 1, defaultUnit: 'piece(s)', quantityOptions: ['1 piece'] },
 
   // Fruits
-  { name: 'Bananas', category: 'fruits', shelfLifeDays: 4, defaultQuantity: 1, defaultUnit: 'bunch', quantityOptions: ['1 bunch', '5 pieces'] },
-  { name: 'Apples', category: 'fruits', shelfLifeDays: 30, defaultQuantity: 3, defaultUnit: 'lb', quantityOptions: ['1 lb', '3 lb bag', '5 lb bag'] },
+  { name: 'Bananas', category: 'fruits', shelfLifeDays: 4, defaultQuantity: 6, defaultUnit: 'piece(s)', quantityOptions: ['1 bunch', '5 pieces'] },
+  { name: 'Apples', category: 'fruits', shelfLifeDays: 30, defaultQuantity: 6, defaultUnit: 'piece(s)', quantityOptions: ['1 lb', '3 lb bag', '5 lb bag'] },
   { name: 'Strawberries', category: 'fruits', shelfLifeDays: 3, defaultQuantity: 1, defaultUnit: 'lb', quantityOptions: ['1 lb container', '2 lb container'] },
   { name: 'Avocado', category: 'fruits', shelfLifeDays: 4, defaultQuantity: 3, defaultUnit: 'piece(s)', quantityOptions: ['1 piece', '3 pieces', 'Bag of 5'] },
   { name: 'Grapes', category: 'fruits', shelfLifeDays: 10, defaultQuantity: 1, defaultUnit: 'lb', quantityOptions: ['1 lb', '2 lb bag'] },
@@ -55,7 +55,7 @@ export const COMMON_FOODS: CommonFood[] = [
   { name: 'Pineapple', category: 'fruits', shelfLifeDays: 5, defaultQuantity: 1, defaultUnit: 'piece(s)', quantityOptions: ['1 whole'] },
   { name: 'Mango', category: 'fruits', shelfLifeDays: 5, defaultQuantity: 2, defaultUnit: 'piece(s)', quantityOptions: ['1 piece', '2 pieces'] },
   { name: 'Kiwi', category: 'fruits', shelfLifeDays: 7, defaultQuantity: 1, defaultUnit: 'lb', quantityOptions: ['1 piece', '1 lb bag'] },
-  { name: 'Oranges', category: 'fruits', shelfLifeDays: 21, defaultQuantity: 4, defaultUnit: 'lb', quantityOptions: ['1 piece', '4 lb bag'] },
+  { name: 'Oranges', category: 'fruits', shelfLifeDays: 21, defaultQuantity: 6, defaultUnit: 'piece(s)', quantityOptions: ['1 piece', '4 lb bag'] },
   { name: 'Grapefruit', category: 'fruits', shelfLifeDays: 14, defaultQuantity: 2, defaultUnit: 'piece(s)', quantityOptions: ['1 piece', '2 pieces'] },
 
   // Dairy
