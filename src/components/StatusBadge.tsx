@@ -1,4 +1,4 @@
-type Status = 'fresh' | 'soon' | 'urgent' | 'expired';
+type Status = 'fresh' | 'soon' | 'urgent' | 'expired' | 'non-perishable';
 
 interface StatusBadgeProps {
   status: Status;
@@ -31,6 +31,12 @@ const statusConfig: Record<Status, { label: string; bg: string; text: string; do
     text: 'text-red-700',
     dot: 'bg-status-expired',
   },
+  'non-perishable': {
+    label: 'Non-perishable',
+    bg: 'bg-gray-100',
+    text: 'text-gray-600',
+    dot: 'bg-gray-400',
+  },
 };
 
 export function StatusBadge({ status, daysRemaining, className = '' }: StatusBadgeProps) {
@@ -52,7 +58,7 @@ export function StatusBadge({ status, daysRemaining, className = '' }: StatusBad
 }
 
 export function getExpiryStatus(expiryDate: string | null | undefined): Status {
-  if (!expiryDate) return 'fresh';
+  if (!expiryDate) return 'non-perishable';
   const now = new Date();
   const expiry = new Date(expiryDate);
   const diffMs = expiry.getTime() - now.getTime();
