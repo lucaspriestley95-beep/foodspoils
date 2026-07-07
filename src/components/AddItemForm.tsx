@@ -3,6 +3,7 @@ import { COMMON_FOODS } from '../data/commonFoods';
 import type { CommonFood } from '../data/commonFoods';
 import { BarcodeScanner } from './BarcodeScanner';
 import { fetchProductFromBarcode } from '../lib/openfoodfacts';
+import { CategoryIcon } from './CategoryIcon';
 
 interface AddItemFormProps {
   onSubmit: (item: {
@@ -434,7 +435,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                           : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-900'
                       }`}
                     >
-                      <span className="text-base">{cat.icon}</span>
+                      <CategoryIcon category={cat.value} className="h-5 w-5" />
                       <span className="truncate w-full px-1 text-center">{cat.label}</span>
                     </button>
                   ))}

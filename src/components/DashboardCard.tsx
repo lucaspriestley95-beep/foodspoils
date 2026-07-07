@@ -11,10 +11,10 @@ interface DashboardCardProps {
 }
 
 const colorStyles: Record<string, { bg: string; text: string; iconBg: string }> = {
-  green: { bg: 'bg-green-950/30', text: 'text-fresh-400', iconBg: 'bg-fresh-100' },
-  yellow: { bg: 'bg-yellow-50', text: 'text-yellow-800', iconBg: 'bg-yellow-100' },
-  orange: { bg: 'bg-orange-50', text: 'text-orange-700', iconBg: 'bg-orange-100' },
-  red: { bg: 'bg-red-950/30', text: 'text-red-400', iconBg: 'bg-red-100' },
+  green: { bg: 'bg-green-950/30', text: 'text-fresh-400', iconBg: 'bg-green-950/30' },
+  yellow: { bg: 'bg-yellow-950/30', text: 'text-yellow-400', iconBg: 'bg-yellow-950/30' },
+  orange: { bg: 'bg-orange-950/30', text: 'text-orange-400', iconBg: 'bg-orange-950/30' },
+  red: { bg: 'bg-red-950/30', text: 'text-red-400', iconBg: 'bg-red-950/30' },
 };
 
 export function DashboardCard({

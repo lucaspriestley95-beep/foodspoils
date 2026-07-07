@@ -1,5 +1,6 @@
 import { StatusBadge, getExpiryStatus, getDaysRemaining } from './StatusBadge';
 import { type FoodItem } from '../db';
+import { CategoryIcon } from './CategoryIcon';
 
 interface FoodItemCardProps {
   item: FoodItem;
@@ -10,36 +11,9 @@ interface FoodItemCardProps {
   className?: string;
 }
 
-const categoryIcons: Record<string, string> = {
-  dairy: '🥛',
-  produce: '🥬',
-  meat: '🥩',
-  seafood: '🐟',
-  grains: '🌾',
-  condiments: '🧂',
-  beverages: '🥤',
-  frozen: '🧊',
-  snacks: '🍿',
-  pantry: '📦',
-  other: '📋',
-};
-
 export function FoodItemCard({ item, onDelete, onEdit, onConsume, onWaste, className = '' }: FoodItemCardProps) {
   const status = getExpiryStatus(item.expiryDate);
   const daysRemaining = getDaysRemaining(item.expiryDate);
-  
-  // Make key matching case-insensitive
-  const catKey = item.category.toLowerCase();
-  let icon = categoryIcons.other;
-  if (catKey.includes('dairy')) icon = categoryIcons.dairy;
-  else if (catKey.includes('produce') || catKey.includes('vegetable') || catKey.includes('fruit')) icon = categoryIcons.produce;
-  else if (catKey.includes('meat') || catKey.includes('poultry') || catKey.includes('seafood') || catKey.includes('fish')) icon = categoryIcons.meat;
-  else if (catKey.includes('grain') || catKey.includes('pasta') || catKey.includes('bread')) icon = categoryIcons.grains;
-  else if (catKey.includes('condiment') || catKey.includes('sauce') || catKey.includes('spice')) icon = categoryIcons.condiments;
-  else if (catKey.includes('beverage') || catKey.includes('drink') || catKey.includes('milk')) icon = categoryIcons.beverages;
-  else if (catKey.includes('frozen') || catKey.includes('ice')) icon = categoryIcons.frozen;
-  else if (catKey.includes('snack') || catKey.includes('cookie') || catKey.includes('chip')) icon = categoryIcons.snacks;
-  else if (catKey.includes('pantry') || catKey.includes('can') || catKey.includes('box')) icon = categoryIcons.pantry;
 
   const statusBorderColors: Record<string, string> = {
     fresh: 'border-l-status-fresh',
@@ -56,8 +30,8 @@ export function FoodItemCard({ item, onDelete, onEdit, onConsume, onWaste, class
     >
       <div className="flex items-center gap-3 p-4">
         {/* Category Icon */}
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-fresh-950/30 text-lg" aria-hidden="true">
-          {icon}
+        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-fresh-950/30 text-lg text-fresh-400" aria-hidden="true">
+          <CategoryIcon category={item.category} className="h-5 w-5" />
         </span>
 
         {/* Item Details */}

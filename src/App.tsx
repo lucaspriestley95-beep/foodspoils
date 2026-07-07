@@ -21,6 +21,7 @@ import {
   AuthScreen,
   RecipeSuggestions,
   BarcodeScanner,
+  CategoryIcon,
   type ScreenKey
 } from './components';
 
@@ -571,7 +572,7 @@ export default function App() {
                       filterCategory === cat.value ? 'bg-fresh-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-900'
                     }`}
                   >
-                    <span>{cat.icon}</span>
+                    <CategoryIcon category={cat.value} className="h-3.5 w-3.5" />
                     <span>{cat.label}</span>
                     <span className="opacity-70">({count})</span>
                   </button>
@@ -600,7 +601,7 @@ export default function App() {
                         className={`flex w-full items-center justify-between p-3 text-left font-semibold text-sm ${cat.bg} ${cat.color}`}
                       >
                         <div className="flex items-center gap-1.5">
-                          <span className="text-base" aria-hidden="true">{cat.icon}</span>
+                          <CategoryIcon category={cat.value} className="h-4 w-4" aria-hidden="true" />
                           <span>{cat.label}</span>
                           <span className="rounded-full bg-gray-800/80 px-2 py-0.5 text-2xs font-bold text-gray-300 shadow-sm">{items.length}</span>
                         </div>
@@ -703,12 +704,13 @@ export default function App() {
             ) : (
               <div className="rounded-md border border-gray-700 bg-gray-800 overflow-hidden shadow-sm divide-y divide-gray-700">
                 {[...historyItems].reverse().map(item => {
-                  const cat = CATEGORIES_INFO.find(c => c.value === item.category);
                   const isConsumed = item.status === 'consumed';
                   return (
                     <div key={item.id} className="flex items-center justify-between p-3.5 hover:bg-gray-900/50 transition-colors">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-lg">{cat?.icon || '📋'}</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-fresh-950/30 text-fresh-400" aria-hidden="true">
+                          <CategoryIcon category={item.category} className="h-4 w-4" />
+                        </span>
                         <div className="min-w-0">
                           <h4 className="font-semibold text-sm text-gray-100 truncate">{item.name}</h4>
                           <p className="text-2xs text-gray-400">{item.quantity} {item.unit} · {item.expiryDate ? `expired ${item.expiryDate}` : 'no expiry'}</p>
