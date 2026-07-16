@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface CategoryIconProps {
   category: string;
   className?: string;
