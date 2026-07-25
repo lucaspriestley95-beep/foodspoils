@@ -132,6 +132,10 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
     setShowScanner(false);
     
     try {
+      // Increment barcode scan count for achievements
+      const currentCount = parseInt(localStorage.getItem('foodspoils_barcode_scan_count') || '0', 10);
+      localStorage.setItem('foodspoils_barcode_scan_count', (currentCount + 1).toString());
+
       const product = await fetchProductFromBarcode(barcode);
       
       if (product) {
@@ -235,7 +239,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for Milk, Eggs, Spinach..."
-                  className="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 pl-10 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
+                  className="w-full rounded-lg border border-charcoal-700 bg-charcoal-800 px-4 py-3 pl-10 text-sm text-gray-200 outline-none transition-all focus:border-fresh-500 focus:bg-charcoal-900 focus:ring-1 focus:ring-fresh-500"
                   autoFocus
                 />
                 <svg className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -261,12 +265,12 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                 <button
                   key={food.name}
                   onClick={() => handleSelectFood(food)}
-                  className="flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800 p-3 text-left hover:border-fresh-200 hover:bg-fresh-950/30 transition-all active:scale-[0.98]"
+                  className="flex items-center justify-between rounded-lg border border-charcoal-700 bg-charcoal-900 p-3 text-left hover:border-fresh-900/50 hover:bg-fresh-950/30 transition-all active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-lg">{CATEGORIES.find(c => c.value === food.category)?.icon || '📦'}</span>
                     <div>
-                      <div className="text-sm font-bold text-gray-100">{food.name}</div>
+                      <div className="text-sm font-bold text-gray-200">{food.name}</div>
                       <div className="text-[10px] text-gray-400 uppercase tracking-tight">{food.category}</div>
                     </div>
                   </div>
@@ -294,7 +298,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                     key={cat.value}
                     type="button"
                     onClick={() => handleSelectCategory(cat.value)}
-                    className="flex flex-col items-center gap-1 rounded-lg border border-gray-700 bg-gray-800 py-3 text-[10px] transition-all hover:bg-fresh-950/30 active:scale-95"
+                    className="flex flex-col items-center gap-1 rounded-lg border border-charcoal-700 bg-charcoal-900 py-3 text-[10px] transition-all hover:bg-fresh-950/30 active:scale-95"
                   >
                     <span className="text-xl">{cat.icon}</span>
                     <span className="font-semibold text-gray-300">{cat.label}</span>
@@ -341,7 +345,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Baby spinach, Milk..."
               required
-              className="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
+              className="w-full rounded-lg border border-charcoal-700 bg-charcoal-800 px-4 py-3 text-sm text-gray-200 outline-none transition-all focus:border-fresh-500 focus:bg-charcoal-900 focus:ring-1 focus:ring-fresh-500"
             />
           </div>
 
@@ -356,7 +360,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                   type="checkbox"
                   checked={noExpiry}
                   onChange={(e) => setNoExpiry(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-gray-300 text-fresh-500 focus:ring-fresh-500"
+                  className="w-3.5 h-3.5 rounded border-charcoal-600 text-fresh-500 focus:ring-fresh-500"
                 />
                 <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-300 transition-colors">No expiry</span>
               </label>
@@ -373,7 +377,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                       className={`flex flex-col items-center justify-center rounded-lg border py-2 transition-all active:scale-95 ${
                         expiryDate === getFutureDate(opt.days)
                           ? 'border-fresh-500 bg-fresh-950/30 ring-1 ring-fresh-500'
-                          : 'border-gray-700 bg-gray-800 hover:bg-gray-900'
+                          : 'border-charcoal-700 bg-charcoal-900 hover:bg-charcoal-800'
                       }`}
                     >
                       <span className={`text-[10px] font-bold ${expiryDate === getFutureDate(opt.days) ? 'text-fresh-400' : 'text-gray-300'}`}>{opt.label}</span>
@@ -390,7 +394,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                     onChange={(e) => setExpiryDate(e.target.value)}
                     min={minDate}
                     required={!noExpiry}
-                    className="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
+                    className="w-full rounded-lg border border-charcoal-700 bg-charcoal-800 px-4 py-3 text-sm text-gray-200 outline-none transition-all focus:border-fresh-500 focus:bg-charcoal-900 focus:ring-1 focus:ring-fresh-500"
                   />
                   <div className="absolute right-10 top-3 text-[10px] font-bold text-gray-400 pointer-events-none">
                     Custom Date
@@ -398,7 +402,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                 </div>
               </div>
             ) : (
-              <div className="rounded-lg border border-dashed border-gray-700 bg-gray-900/50 p-4 text-center animate-fade-in">
+              <div className="rounded-lg border border-dashed border-charcoal-700 bg-charcoal-800/50 p-4 text-center animate-fade-in">
                 <p className="text-xs text-gray-400 font-medium">This item is marked as non-perishable.</p>
               </div>
             )}
@@ -431,8 +435,8 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                       onClick={() => setCategory(cat.value)}
                       className={`flex flex-col items-center gap-1 rounded-lg border py-2 text-[10px] transition-all ${
                         category === cat.value
-                          ? 'bg-fresh-950/30 border-fresh-200 text-fresh-400 font-bold'
-                          : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-900'
+                          ? 'bg-fresh-950/30 border-fresh-900/50 text-fresh-400 font-bold'
+                          : 'bg-charcoal-900 border-charcoal-700 text-gray-400 hover:bg-charcoal-800'
                       }`}
                     >
                       <CategoryIcon category={cat.value} className="h-5 w-5" />
@@ -455,12 +459,12 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                       min={1}
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
+                      className="w-16 rounded-lg border border-charcoal-700 bg-charcoal-800 px-3 py-2 text-sm text-gray-200 outline-none transition-all focus:border-fresh-500 focus:bg-charcoal-900 focus:ring-1 focus:ring-fresh-500"
                     />
                     <select
                       value={unit}
                       onChange={(e) => setUnit(e.target.value)}
-                      className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-2 py-2 text-sm text-gray-100 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
+                      className="flex-1 rounded-lg border border-charcoal-700 bg-charcoal-800 px-2 py-2 text-sm text-gray-200 outline-none transition-all focus:border-fresh-500 focus:bg-charcoal-900 focus:ring-1 focus:ring-fresh-500"
                     >
                       {UNITS.map((u) => (
                         <option key={u} value={u}>{u}</option>
@@ -479,7 +483,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="e.g. For salad"
-                    className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder-gray-400 outline-none transition-all focus:border-fresh-500 focus:bg-gray-800 focus:ring-1 focus:ring-fresh-500"
+                    className="w-full rounded-lg border border-charcoal-700 bg-charcoal-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-400 outline-none transition-all focus:border-fresh-500 focus:bg-charcoal-900 focus:ring-1 focus:ring-fresh-500"
                   />
                 </div>
               </div>
@@ -505,7 +509,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
                             if (foundUnit) setUnit(foundUnit);
                           }
                         }}
-                        className="rounded-full border border-gray-700 bg-gray-800 px-3 py-1 text-xs font-medium text-gray-300 hover:border-fresh-500 hover:text-fresh-400 transition-all active:scale-95"
+                        className="rounded-full border border-charcoal-700 bg-charcoal-900 px-3 py-1 text-xs font-medium text-gray-300 hover:border-fresh-500 hover:text-fresh-400 transition-all active:scale-95"
                       >
                         {opt}
                       </button>
@@ -528,7 +532,7 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
               <button
                 type="button"
                 onClick={onCancel}
-                className="rounded-xl border border-gray-700 bg-gray-800 px-4 py-4 text-sm font-bold text-gray-400 transition-all hover:bg-gray-900 active:bg-gray-700/40"
+                className="rounded-xl border border-charcoal-700 bg-charcoal-900 px-4 py-4 text-sm font-bold text-gray-400 transition-all hover:bg-charcoal-800 active:bg-charcoal-600/40"
               >
                 Cancel
               </button>
@@ -545,12 +549,12 @@ export function AddItemForm({ onSubmit, onCancel, initialItem, initialBarcode, i
 
       {isScanning && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col items-center gap-4">
+          <div className="bg-charcoal-900 p-6 rounded-2xl shadow-xl flex flex-col items-center gap-4">
             <svg className="w-10 h-10 text-fresh-500 animate-spin" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p className="font-bold text-gray-100">Identifying product...</p>
+            <p className="font-bold text-gray-200">Identifying product...</p>
           </div>
         </div>
       )}
