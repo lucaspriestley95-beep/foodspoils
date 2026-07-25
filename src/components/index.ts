@@ -11,6 +11,7 @@ export { Header, WelcomeHeader } from './Header';
 export { OnboardingScreen } from './OnboardingScreen';
 export { ReferralSection } from './ReferralSection';
 export { ProfileCustomization } from './ProfileCustomization';
+export { ShareStatsSection } from './ShareStatsSection';
 export { AuthScreen } from './AuthScreen';
 export { BarcodeScanner } from './BarcodeScanner';
 export { RecipeSuggestions } from './RecipeSuggestions';

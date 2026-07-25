@@ -18,6 +18,7 @@ import {
   OnboardingScreen,
   ReferralSection,
   ProfileCustomization,
+  ShareStatsSection,
   AuthScreen,
   RecipeSuggestions,
   BarcodeScanner,
@@ -735,6 +736,8 @@ export default function App() {
           <ReferralSection />
           
           {user && <ProfileCustomization />}
+          
+          <ShareStatsSection activeItems={activeItems} historyItems={historyItems} />
 
           {/* User Account Section */}
           <div className="mx-4 mb-4 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-4">
