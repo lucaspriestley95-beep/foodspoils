@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @theme {
+  /* ——— Dark Forest Palette ——— */
+  
+  /* Primary — Fresh Greens (darkened + richer) */
   --color-fresh-50: #F0FFF4;
   --color-fresh-100: #D4EDDA;
   --color-fresh-200: #A8E6B6;
@@ -9,15 +12,25 @@
   --color-fresh-600: #16A34A;
   --color-fresh-700: #15803D;
   --color-fresh-900: #14532D;
+  --color-fresh-950: #0A1F12; /* Deep forest green — accent backgrounds */
 
+  /* Accent — Warm Coral (unchanged) */
   --color-coral-400: #FD8B64;
   --color-coral-500: #FF6B35;
   --color-coral-600: #E85D26;
 
+  /* Status colors for expiry (unchanged) */
   --color-status-fresh: #22C55E;
   --color-status-soon: #FACC15;
   --color-status-urgent: #FF6B35;
   --color-status-expired: #EF4444;
+
+  /* Dark theme neutrals */
+  --color-charcoal-950: #0A0D0B; /* Deepest — page background */
+  --color-charcoal-900: #111613;  /* Cards, surfaces */
+  --color-charcoal-800: #1A1F1C;  /* Elevated cards, inputs */
+  --color-charcoal-700: #252A27;  /* Borders */
+  --color-charcoal-600: #3A3F3C;  /* Subtle hover */
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -26,7 +39,8 @@
   --radius-md: 10px;
   --radius-lg: 14px;
 
-  --shadow-glow-green: 0 0 12px rgba(34, 197, 94, 0.3);
+  --shadow-glow-green: 0 0 16px rgba(34, 197, 94, 0.2);
+  --shadow-glow-coral: 0 0 16px rgba(255, 107, 53, 0.2);
 
   --animate-fade-in: fadeIn 0.2s ease-out;
   --animate-slide-up: slideUp 0.3s ease-out;
@@ -48,6 +62,6 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: #111827; /* bg-gray-900 */
-  color: #F3F4F6; /* text-gray-100 */
+  background-color: #0A0D0B; /* charcoal-950 */
+  color: #E5E7EB; /* text-gray-200 */
 }

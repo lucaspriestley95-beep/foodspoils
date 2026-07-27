@@ -26,24 +26,24 @@ import {
 } from './components';
 
 const CATEGORIES_INFO = [
-  { value: 'vegetables', label: 'Vegetables', icon: '🥦', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { value: 'fruits', label: 'Fruits', icon: '🍎', color: 'text-rose-500', bg: 'bg-rose-50' },
-  { value: 'dairy', label: 'Dairy', icon: '🥛', color: 'text-amber-600', bg: 'bg-amber-950/30' },
-  { value: 'meat', label: 'Meat', icon: '🥩', color: 'text-rose-600', bg: 'bg-rose-50' },
-  { value: 'seafood', label: 'Seafood', icon: '🐟', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-  { value: 'deli', label: 'Deli', icon: '🥪', color: 'text-orange-700', bg: 'bg-orange-50' },
-  { value: 'grains', label: 'Grains & Bakery', icon: '🌾', color: 'text-yellow-700', bg: 'bg-yellow-50' },
-  { value: 'breakfast', label: 'Breakfast', icon: '🥣', color: 'text-purple-600', bg: 'bg-purple-50' },
-  { value: 'canned-goods', label: 'Canned Goods', icon: '🥫', color: 'text-gray-300', bg: 'bg-gray-100' },
-  { value: 'sauces-oils', label: 'Sauces & Oils', icon: '🏺', color: 'text-teal-600', bg: 'bg-teal-50' },
+  { value: 'vegetables', label: 'Vegetables', icon: '🥦', color: 'text-emerald-400', bg: 'bg-emerald-950/30' },
+  { value: 'fruits', label: 'Fruits', icon: '🍎', color: 'text-rose-400', bg: 'bg-rose-950/30' },
+  { value: 'dairy', label: 'Dairy', icon: '🥛', color: 'text-amber-400', bg: 'bg-amber-950/30' },
+  { value: 'meat', label: 'Meat', icon: '🥩', color: 'text-rose-400', bg: 'bg-rose-950/30' },
+  { value: 'seafood', label: 'Seafood', icon: '🐟', color: 'text-cyan-400', bg: 'bg-cyan-950/30' },
+  { value: 'deli', label: 'Deli', icon: '🥪', color: 'text-orange-400', bg: 'bg-orange-950/30' },
+  { value: 'grains', label: 'Grains & Bakery', icon: '🌾', color: 'text-yellow-400', bg: 'bg-yellow-950/30' },
+  { value: 'breakfast', label: 'Breakfast', icon: '🥣', color: 'text-purple-400', bg: 'bg-purple-950/30' },
+  { value: 'canned-goods', label: 'Canned Goods', icon: '🥫', color: 'text-gray-400', bg: 'bg-charcoal-800' },
+  { value: 'sauces-oils', label: 'Sauces & Oils', icon: '🏺', color: 'text-teal-400', bg: 'bg-teal-950/30' },
   { value: 'spices-herbs', label: 'Spices & Herbs', icon: '🌿', color: 'text-green-400', bg: 'bg-green-950/30' },
-  { value: 'baking', label: 'Baking', icon: '🥯', color: 'text-amber-700', bg: 'bg-amber-950/30' },
-  { value: 'international', label: 'International', icon: '🏮', color: 'text-red-600', bg: 'bg-red-950/30' },
-  { value: 'beverages', label: 'Beverages', icon: '🥤', color: 'text-blue-600', bg: 'bg-blue-50' },
-  { value: 'frozen', label: 'Frozen', icon: '🧊', color: 'text-sky-500', bg: 'bg-sky-50' },
-  { value: 'snacks', label: 'Snacks', icon: '🍿', color: 'text-orange-600', bg: 'bg-orange-50' },
-  { value: 'pantry', label: 'Pantry', icon: '📦', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-  { value: 'other', label: 'Other', icon: '📋', color: 'text-slate-500', bg: 'bg-slate-50' },
+  { value: 'baking', label: 'Baking', icon: '🥯', color: 'text-amber-400', bg: 'bg-amber-950/30' },
+  { value: 'international', label: 'International', icon: '🏮', color: 'text-red-400', bg: 'bg-red-950/30' },
+  { value: 'beverages', label: 'Beverages', icon: '🥤', color: 'text-blue-400', bg: 'bg-blue-950/30' },
+  { value: 'frozen', label: 'Frozen', icon: '🧊', color: 'text-sky-400', bg: 'bg-sky-950/30' },
+  { value: 'snacks', label: 'Snacks', icon: '🍿', color: 'text-orange-400', bg: 'bg-orange-950/30' },
+  { value: 'pantry', label: 'Pantry', icon: '📦', color: 'text-indigo-400', bg: 'bg-indigo-950/30' },
+  { value: 'other', label: 'Other', icon: '📋', color: 'text-slate-400', bg: 'bg-slate-800' },
 ];
 
 export default function App() {
@@ -425,7 +425,7 @@ export default function App() {
   const dollarsSaved = totalConsumed * 4.5;
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-gray-900 pb-24 font-sans shadow-sm border-x border-gray-700">
+    <div className="mx-auto min-h-screen max-w-md bg-charcoal-950 pb-24 font-sans shadow-sm border-x border-charcoal-700">
       
       {/* 1. DASHBOARD SCREEN */}
       {activeScreen === 'dashboard' && (
@@ -468,7 +468,7 @@ export default function App() {
           </div>
 
           <div className="px-4 pb-4">
-            <h2 className="mb-2 text-sm font-semibold text-gray-100">⚠️ Eat These First!</h2>
+            <h2 className="mb-2 text-sm font-semibold text-gray-200">⚠️ Eat These First!</h2>
             {expiringSoon.length === 0 ? (
               <NoExpiringItems />
             ) : (
@@ -487,10 +487,10 @@ export default function App() {
             )}
           </div>
 
-          <div className="mx-4 mb-4 flex gap-3 rounded-md border border-green-900/50 bg-green-950/30 p-4 text-xs text-green-800">
+          <div className="mx-4 mb-4 flex gap-3 rounded-md border border-green-900/50 bg-green-950/30 p-4 text-xs text-green-300">
             <span className="text-xl" aria-hidden="true">💡</span>
             <div className="space-y-1">
-              <p className="font-bold text-green-900">Pro Tip</p>
+              <p className="font-bold text-green-300">Pro Tip</p>
               <p className="leading-relaxed">
                 {currentTip}
               </p>
@@ -518,7 +518,7 @@ export default function App() {
           
           <div className="px-4 pb-3">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-100">📋 Inventory</h2>
+              <h2 className="text-sm font-semibold text-gray-200">📋 Inventory</h2>
             </div>
 
             <div className="relative mb-3">
@@ -532,7 +532,7 @@ export default function App() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search pantry items..."
-                className="w-full rounded-sm border border-gray-700 bg-gray-800 py-2 pl-9 pr-4 text-sm text-gray-100 placeholder-gray-400 outline-none transition-colors focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500"
+                className="w-full rounded-sm border border-charcoal-700 bg-charcoal-900 py-2 pl-9 pr-4 text-sm text-gray-200 placeholder-gray-400 outline-none transition-colors focus:border-fresh-500 focus:ring-1 focus:ring-fresh-500"
               />
             </div>
 
@@ -540,7 +540,7 @@ export default function App() {
               <button
                 onClick={() => setFilterCategory('All')}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors ${
-                  filterCategory === 'All' ? 'bg-gray-800 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-900'
+                  filterCategory === 'All' ? 'bg-charcoal-900 text-white' : 'bg-charcoal-900 text-gray-400 border border-charcoal-700 hover:bg-charcoal-800'
                 }`}
               >
                 All ({activeItems.length})
@@ -548,7 +548,7 @@ export default function App() {
               <button
                 onClick={() => setFilterCategory('Expiring Soon')}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                  filterCategory === 'Expiring Soon' ? 'bg-yellow-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-900'
+                  filterCategory === 'Expiring Soon' ? 'bg-yellow-500 text-white' : 'bg-charcoal-900 text-gray-400 border border-charcoal-700 hover:bg-charcoal-800'
                 }`}
               >
                 ⚠️ Expiring Soon
@@ -556,7 +556,7 @@ export default function App() {
               <button
                 onClick={() => setFilterCategory('Expired')}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                  filterCategory === 'Expired' ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-900'
+                  filterCategory === 'Expired' ? 'bg-red-500 text-white' : 'bg-charcoal-900 text-gray-400 border border-charcoal-700 hover:bg-charcoal-800'
                 }`}
               >
                 🛑 Expired
@@ -569,7 +569,7 @@ export default function App() {
                     key={cat.value}
                     onClick={() => setFilterCategory(cat.value)}
                     className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                      filterCategory === cat.value ? 'bg-fresh-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-900'
+                      filterCategory === cat.value ? 'bg-fresh-500 text-white' : 'bg-charcoal-900 text-gray-400 border border-charcoal-700 hover:bg-charcoal-800'
                     }`}
                   >
                     <span>{cat.icon}</span>
@@ -595,7 +595,7 @@ export default function App() {
                   if (items.length === 0) return null;
                   const isCollapsed = collapsedCategories[cat.value];
                   return (
-                    <div key={cat.value} className="rounded-md border border-gray-700 bg-gray-800 overflow-hidden shadow-sm">
+                    <div key={cat.value} className="rounded-md border border-charcoal-700 bg-charcoal-900 overflow-hidden shadow-sm">
                       <button
                         onClick={() => setCollapsedCategories(prev => ({ ...prev, [cat.value]: !prev[cat.value] }))}
                         className={`flex w-full items-center justify-between p-3 text-left font-semibold text-sm ${cat.bg} ${cat.color}`}
@@ -603,14 +603,14 @@ export default function App() {
                         <div className="flex items-center gap-1.5">
                           <span className="text-base" aria-hidden="true">{cat.icon}</span>
                           <span>{cat.label}</span>
-                          <span className="rounded-full bg-gray-800/80 px-2 py-0.5 text-2xs font-bold text-gray-300 shadow-sm">{items.length}</span>
+                          <span className="rounded-full bg-charcoal-900/80 px-2 py-0.5 text-2xs font-bold text-gray-300 shadow-sm">{items.length}</span>
                         </div>
                         <svg className={`h-4 w-4 transform transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
                       {!isCollapsed && (
-                        <div className="flex flex-col gap-2 p-3 bg-gray-900/30">
+                        <div className="flex flex-col gap-2 p-3 bg-charcoal-800/30">
                           {items.map(item => (
                             <FoodItemCard key={item.id} item={item} onEdit={handleStartEdit} onDelete={handleDeleteItem} onConsume={handleConsumeItem} onWaste={handleWasteItem} />
                           ))}
@@ -632,7 +632,7 @@ export default function App() {
           <div className="px-4">
             {isPremium ? (
               <div className="space-y-4">
-                <div className="bg-gray-800 rounded-2xl shadow-sm border border-gray-700 p-4 min-h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="bg-charcoal-900 rounded-2xl shadow-sm border border-charcoal-700 p-4 min-h-[300px] flex flex-col items-center justify-center relative overflow-hidden">
                   <BarcodeScanner 
                     onScan={async (barcode: string) => {
                       setInitialBarcode(barcode);
@@ -651,7 +651,7 @@ export default function App() {
               <>
                 <ScanPrompt onScan={() => {}} />
                 <div className="mt-4 rounded-md border border-yellow-200 bg-gradient-to-br from-amber-50 to-orange-50/30 p-5 shadow-sm text-sm space-y-4">
-                  <h3 className="font-bold text-gray-100 flex items-center gap-1.5 text-base">👑 FoodSpoils Premium Benefits</h3>
+                  <h3 className="font-bold text-gray-200 flex items-center gap-1.5 text-base">👑 FoodSpoils Premium Benefits</h3>
                   <ul className="space-y-2.5 text-xs text-gray-300 font-medium">
                     <li className="flex items-start gap-2"><span>✅</span><span><strong>Instant Barcode Scanner</strong>: Skip manual entry entirely.</span></li>
                     <li className="flex items-start gap-2"><span>✅</span><span><strong>Cloud Sync</strong>: Access your pantry from any device.</span></li>
@@ -671,8 +671,8 @@ export default function App() {
         <div className="animate-fade-in">
           <Header title="Waste Report" subtitle="Analyze household statistics" />
           <div className="px-4 pb-4">
-            <div className="rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-4">
-              <h3 className="text-sm font-semibold text-gray-100">📈 Household Impact Overview</h3>
+            <div className="rounded-md border border-charcoal-700 bg-charcoal-900 p-4 shadow-sm space-y-4">
+              <h3 className="text-sm font-semibold text-gray-200">📈 Household Impact Overview</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-md bg-green-950/30/50 border border-green-900/50 p-3 text-center">
                   <span className="text-2xl">😋</span>
@@ -698,20 +698,20 @@ export default function App() {
             </div>
           </div>
           <div className="px-4 pb-4">
-            <h3 className="mb-2 text-sm font-semibold text-gray-100">🕒 Activity Log</h3>
+            <h3 className="mb-2 text-sm font-semibold text-gray-200">🕒 Activity Log</h3>
             {historyItems.length === 0 ? (
-              <div className="rounded-md border border-gray-700 bg-gray-800 p-8 text-center text-gray-400 text-xs">No archived items yet.</div>
+              <div className="rounded-md border border-charcoal-700 bg-charcoal-900 p-8 text-center text-gray-400 text-xs">No archived items yet.</div>
             ) : (
-              <div className="rounded-md border border-gray-700 bg-gray-800 overflow-hidden shadow-sm divide-y divide-gray-700">
+              <div className="rounded-md border border-charcoal-700 bg-charcoal-900 overflow-hidden shadow-sm divide-y divide-gray-700">
                 {[...historyItems].reverse().map(item => {
                   const cat = CATEGORIES_INFO.find(c => c.value === item.category);
                   const isConsumed = item.status === 'consumed';
                   return (
-                    <div key={item.id} className="flex items-center justify-between p-3.5 hover:bg-gray-900/50 transition-colors">
+                    <div key={item.id} className="flex items-center justify-between p-3.5 hover:bg-charcoal-800/50 transition-colors">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="text-lg">{cat?.icon || '📋'}</span>
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-sm text-gray-100 truncate">{item.name}</h4>
+                          <h4 className="font-semibold text-sm text-gray-200 truncate">{item.name}</h4>
                           <p className="text-2xs text-gray-400">{item.quantity} {item.unit} · {item.expiryDate ? `expired ${item.expiryDate}` : 'no expiry'}</p>
                         </div>
                       </div>
@@ -740,8 +740,8 @@ export default function App() {
           <ShareStatsSection activeItems={activeItems} historyItems={historyItems} />
 
           {/* User Account Section */}
-          <div className="mx-4 mb-4 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-4">
-            <h3 className="text-sm font-semibold text-gray-100 flex items-center gap-1.5">
+          <div className="mx-4 mb-4 rounded-md border border-charcoal-700 bg-charcoal-900 p-4 shadow-sm space-y-4">
+            <h3 className="text-sm font-semibold text-gray-200 flex items-center gap-1.5">
               <svg className="h-4 w-4 text-fresh-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
@@ -768,21 +768,21 @@ export default function App() {
             )}
           </div>
 
-          <div className="mx-4 mb-4 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-3.5">
+          <div className="mx-4 mb-4 rounded-md border border-charcoal-700 bg-charcoal-900 p-4 shadow-sm space-y-3.5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xs uppercase tracking-wider text-gray-400 font-bold">Current Plan</p>
-                <h3 className="text-base font-bold text-gray-100 flex items-center gap-1">
+                <h3 className="text-base font-bold text-gray-200 flex items-center gap-1">
                   {isPremium ? <><span className="text-fresh-500">👑</span> FoodSpoils Premium</> : 'FoodSpoils Free'}
                 </h3>
               </div>
-              <span className={`rounded-full px-2.5 py-0.5 text-2xs font-bold ${isPremium ? 'bg-green-100 text-green-400' : 'bg-gray-100 text-gray-300'}`}>{isPremium ? 'Unlimited' : 'Basic Tier'}</span>
+              <span className={`rounded-full px-2.5 py-0.5 text-2xs font-bold ${isPremium ? 'bg-green-950/30 text-green-400' : 'bg-charcoal-800 text-gray-300'}`}>{isPremium ? 'Unlimited' : 'Basic Tier'}</span>
             </div>
 
             {!isPremium && (
               <div className="space-y-1.5">
                 <div className="flex justify-between text-2xs font-medium text-gray-400"><span>Pantry Capacity Usage</span><span>{activeItems.length} / 15 items</span></div>
-                <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden"><div className={`h-full transition-all duration-300 ${activeItems.length >= 14 ? 'bg-red-500' : 'bg-fresh-500'}`} style={{ width: `${Math.min(100, (activeItems.length / 15) * 100)}%` }} /></div>
+                <div className="h-1.5 w-full rounded-full bg-charcoal-800 overflow-hidden"><div className={`h-full transition-all duration-300 ${activeItems.length >= 14 ? 'bg-red-500' : 'bg-fresh-500'}`} style={{ width: `${Math.min(100, (activeItems.length / 15) * 100)}%` }} /></div>
               </div>
             )}
 
@@ -798,11 +798,11 @@ export default function App() {
             )}
           </div>
 
-          <div className="mx-4 mb-4 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-3">
-            <h3 className="text-sm font-semibold text-gray-100">🛠️ Developer Tools</h3>
+          <div className="mx-4 mb-4 rounded-md border border-charcoal-700 bg-charcoal-900 p-4 shadow-sm space-y-3">
+            <h3 className="text-sm font-semibold text-gray-200">🛠️ Developer Tools</h3>
             <div className="space-y-2">
-              <button onClick={handleSeedSampleData} className="w-full flex items-center justify-center gap-2 rounded-sm border border-gray-700 bg-gray-800 py-2.5 text-xs font-semibold text-gray-300 hover:bg-gray-900 active:bg-gray-700/40 transition-colors min-h-touch"><span>🌱</span> Seed Sample Grocery Data</button>
-              <button onClick={handleClearDatabase} className="w-full flex items-center justify-center gap-2 rounded-sm border border-red-900/50 bg-gray-800 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-950/30 active:bg-red-100 transition-colors min-h-touch"><span>🗑️</span> Reset Database (Clear All)</button>
+              <button onClick={handleSeedSampleData} className="w-full flex items-center justify-center gap-2 rounded-sm border border-charcoal-700 bg-charcoal-900 py-2.5 text-xs font-semibold text-gray-300 hover:bg-charcoal-800 active:bg-charcoal-600/40 transition-colors min-h-touch"><span>🌱</span> Seed Sample Grocery Data</button>
+              <button onClick={handleClearDatabase} className="w-full flex items-center justify-center gap-2 rounded-sm border border-red-900/50 bg-charcoal-900 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-950/30 active:bg-red-950/30 transition-colors min-h-touch"><span>🗑️</span> Reset Database (Clear All)</button>
             </div>
           </div>
           <div className="mx-4 text-center space-y-1"><p className="text-2xs text-gray-400 font-semibold">FoodSpoils App v1.2.0 · Supabase Ready</p></div>
@@ -817,10 +817,10 @@ export default function App() {
           }}
           onTouchMove={(e) => e.preventDefault()}
         >
-          <div className="w-full max-w-md bg-gray-800 rounded-3xl shadow-xl p-5 space-y-4 relative max-h-[90vh] overflow-y-auto mx-4">
-            <div className="flex items-center justify-between border-b border-gray-700 pb-2">
-              <h3 className="text-base font-bold text-gray-100">{editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}</h3>
-              <button onClick={handleCancelForm} className="rounded-full bg-gray-100 p-1.5 text-gray-400 hover:text-gray-300 transition-colors" aria-label="Close"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+          <div className="w-full max-w-md bg-charcoal-900 rounded-3xl shadow-xl p-5 space-y-4 relative max-h-[90vh] overflow-y-auto mx-4">
+            <div className="flex items-center justify-between border-b border-charcoal-700 pb-2">
+              <h3 className="text-base font-bold text-gray-200">{editingItem ? '✏️ Edit Food Item' : '🥬 Add Pantry Item'}</h3>
+              <button onClick={handleCancelForm} className="rounded-full bg-charcoal-800 p-1.5 text-gray-400 hover:text-gray-300 transition-colors" aria-label="Close"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
             <AddItemForm onSubmit={handleSubmitForm} onCancel={handleCancelForm} initialItem={editingItem || undefined} initialBarcode={initialBarcode} isPremium={isPremium} className="border-none shadow-none !p-0 !bg-transparent" />
           </div>

@@ -9,31 +9,31 @@ interface StatusBadgeProps {
 const statusConfig: Record<Status, { label: string; bg: string; text: string; dot: string }> = {
   fresh: {
     label: 'Fresh',
-    bg: 'bg-green-100',
+    bg: 'bg-green-950/30',
     text: 'text-green-400',
     dot: 'bg-status-fresh',
   },
   soon: {
     label: 'Expiring Soon',
-    bg: 'bg-yellow-100',
-    text: 'text-yellow-800',
+    bg: 'bg-yellow-950/30',
+    text: 'text-yellow-400',
     dot: 'bg-status-soon',
   },
   urgent: {
     label: 'Use Today!',
-    bg: 'bg-orange-100',
-    text: 'text-orange-700',
+    bg: 'bg-orange-950/30',
+    text: 'text-orange-400',
     dot: 'bg-status-urgent',
   },
   expired: {
     label: 'Expired',
-    bg: 'bg-red-100',
+    bg: 'bg-red-950/30',
     text: 'text-red-400',
     dot: 'bg-status-expired',
   },
   'non-perishable': {
     label: 'Non-perishable',
-    bg: 'bg-gray-100',
+    bg: 'bg-charcoal-800',
     text: 'text-gray-600',
     dot: 'bg-gray-400',
   },

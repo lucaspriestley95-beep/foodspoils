@@ -27,7 +27,7 @@ export function EmptyState({ icon, title, description, action, className = '' }:
       </div>
 
       {/* Text */}
-      <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
+      <h3 className="text-lg font-semibold text-gray-200">{title}</h3>
       <p className="mt-2 max-w-xs text-sm text-gray-400">{description}</p>
 
       {/* Action */}

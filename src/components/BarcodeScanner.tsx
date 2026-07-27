@@ -72,7 +72,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
         </div>
         <button 
           onClick={onClose}
-          className="p-2.5 bg-gray-800/10 text-white hover:bg-gray-800/20 rounded-full transition-colors"
+          className="p-2.5 bg-charcoal-900/10 text-white hover:bg-charcoal-900/20 rounded-full transition-colors"
           aria-label="Close scanner"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,7 +82,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
       </div>
 
       {/* Scanner Container */}
-      <div className="relative w-full max-w-md aspect-[3/4] overflow-hidden bg-gray-900 shadow-2xl ring-1 ring-white/10">
+      <div className="relative w-full max-w-md aspect-[3/4] overflow-hidden bg-charcoal-800 shadow-2xl ring-1 ring-white/10">
         <div id="barcode-reader" className="w-full h-full"></div>
         
         {isInitializing && !error && (
