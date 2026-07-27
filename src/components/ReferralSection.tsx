@@ -29,13 +29,13 @@ export function ReferralSection() {
   };
 
   return (
-    <div className="mx-4 mb-4 rounded-md border border-fresh-900/50 bg-gray-800 p-4 shadow-sm space-y-3">
+    <div className="mx-4 mb-4 rounded-md border border-fresh-900/50 bg-charcoal-900 p-4 shadow-sm space-y-3">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-fresh-950/30 text-xl" aria-hidden="true">
           📢
         </div>
         <div>
-          <h3 className="text-sm font-bold text-gray-100">Invite Friends</h3>
+          <h3 className="text-sm font-bold text-gray-200">Invite Friends</h3>
           <p className="text-xs text-gray-400">Help others reduce food waste!</p>
         </div>
       </div>
@@ -48,7 +48,7 @@ export function ReferralSection() {
         onClick={handleShare}
         className={`w-full flex items-center justify-center gap-2 rounded-sm py-2.5 text-xs font-bold transition-all ${
           copied 
-            ? 'bg-fresh-100 text-fresh-400 border border-fresh-200' 
+            ? 'bg-fresh-950/50 text-fresh-400 border border-fresh-900/50' 
             : 'bg-fresh-500 text-white hover:bg-fresh-600 shadow-sm'
         }`}
       >

@@ -11,10 +11,10 @@ interface DashboardCardProps {
 }
 
 const colorStyles: Record<string, { bg: string; text: string; iconBg: string }> = {
-  green: { bg: 'bg-green-950/30', text: 'text-fresh-400', iconBg: 'bg-fresh-100' },
-  yellow: { bg: 'bg-yellow-50', text: 'text-yellow-800', iconBg: 'bg-yellow-100' },
-  orange: { bg: 'bg-orange-50', text: 'text-orange-700', iconBg: 'bg-orange-100' },
-  red: { bg: 'bg-red-950/30', text: 'text-red-400', iconBg: 'bg-red-100' },
+  green: { bg: 'bg-green-950/30', text: 'text-fresh-400', iconBg: 'bg-fresh-950/50' },
+  yellow: { bg: 'bg-yellow-950/30', text: 'text-yellow-400', iconBg: 'bg-yellow-950/30' },
+  orange: { bg: 'bg-orange-950/30', text: 'text-orange-400', iconBg: 'bg-orange-950/30' },
+  red: { bg: 'bg-red-950/30', text: 'text-red-400', iconBg: 'bg-red-950/30' },
 };
 
 export function DashboardCard({
@@ -31,7 +31,7 @@ export function DashboardCard({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-4 rounded-md border border-gray-700 bg-gray-800 p-4 text-left shadow-sm transition-all hover:shadow-md ${className}`}
+      className={`flex items-center gap-4 rounded-md border border-charcoal-700 bg-charcoal-900 p-4 text-left shadow-sm transition-all hover:shadow-md ${className}`}
       disabled={!onClick}
       aria-label={`${title}: ${value}`}
     >

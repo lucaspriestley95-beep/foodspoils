@@ -78,7 +78,7 @@ const navItems: NavItem[] = [
 export function BottomNav({ activeScreen, onNavigate, className = '' }: BottomNavProps) {
   return (
     <nav
-      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-gray-700 bg-gray-800/95 backdrop-blur-lg safe-area-bottom ${className}`}
+      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-charcoal-700 bg-charcoal-900/95 backdrop-blur-lg safe-area-bottom ${className}`}
       role="navigation"
       aria-label="Main navigation"
     >

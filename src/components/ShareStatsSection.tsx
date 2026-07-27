@@ -287,29 +287,29 @@ export function ShareStatsSection({ activeItems, historyItems }: ShareStatsSecti
   };
 
   return (
-    <div className="mx-4 mb-4 rounded-md border border-gray-700 bg-gray-800 p-4 shadow-sm space-y-4 animate-fade-in">
+    <div className="mx-4 mb-4 rounded-md border border-charcoal-700 bg-charcoal-900 p-4 shadow-sm space-y-4 animate-fade-in">
       <div className="flex items-center gap-2">
         <span className="text-lg">✨</span>
-        <h3 className="text-sm font-semibold text-gray-100">My Food-Saving Impact</h3>
+        <h3 className="text-sm font-semibold text-gray-200">My Food-Saving Impact</h3>
       </div>
 
       {/* Grid preview of the stats inside the app */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="rounded border border-gray-700/50 bg-gray-900/40 p-2.5 text-center flex flex-col justify-between min-h-[110px]">
+        <div className="rounded border border-charcoal-700/50 bg-charcoal-800/40 p-2.5 text-center flex flex-col justify-between min-h-[110px]">
           <span className="text-xl">🥬</span>
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Food Saved</p>
           <p className="text-sm font-extrabold text-white mt-0.5">{lbsSaved} lbs</p>
           <p className="text-[8px] text-gray-500 mt-1 truncate">Eaten & kept fresh</p>
         </div>
 
-        <div className="rounded border border-gray-700/50 bg-gray-900/40 p-2.5 text-center flex flex-col justify-between min-h-[110px]">
+        <div className="rounded border border-charcoal-700/50 bg-charcoal-800/40 p-2.5 text-center flex flex-col justify-between min-h-[110px]">
           <span className="text-xl">🔥</span>
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Daily Streak</p>
           <p className="text-sm font-extrabold text-coral-500 mt-0.5">{streak} Days</p>
           <p className="text-[8px] text-gray-500 mt-1 truncate">Reducing waste</p>
         </div>
 
-        <div className="rounded border border-gray-700/50 bg-gray-900/40 p-2.5 text-center flex flex-col justify-between min-h-[110px]">
+        <div className="rounded border border-charcoal-700/50 bg-charcoal-800/40 p-2.5 text-center flex flex-col justify-between min-h-[110px]">
           <span className="text-xl">{achievement.icon}</span>
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Achievement</p>
           <p className="text-sm font-extrabold text-white mt-0.5 truncate">{achievement.name}</p>

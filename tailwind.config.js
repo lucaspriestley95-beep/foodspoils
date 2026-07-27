@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary — Fresh Greens
+        // Primary — Fresh Greens (dark-forest tuned)
         fresh: {
           50: '#F0FFF4',
           100: '#D4EDDA',
@@ -14,6 +14,7 @@ export default {
           600: '#16A34A',
           700: '#15803D',
           900: '#14532D',
+          950: '#0A1F12', // Deep forest accent background
         },
         // Accent — Warm Coral
         coral: {
@@ -27,6 +28,14 @@ export default {
           soon: '#FACC15',
           urgent: '#FF6B35',
           expired: '#EF4444',
+        },
+        // Dark neutrals — charcoal with subtle green undertones
+        charcoal: {
+          950: '#0A0D0B', // Page background
+          900: '#111613', // Card surfaces
+          800: '#1A1F1C', // Elevated / inputs
+          700: '#252A27', // Borders
+          600: '#3A3F3C', // Hover states
         },
       },
       fontFamily: {
@@ -42,7 +51,8 @@ export default {
         lg: '14px',
       },
       boxShadow: {
-        'glow-green': '0 0 12px rgba(34, 197, 94, 0.3)',
+        'glow-green': '0 0 16px rgba(34, 197, 94, 0.2)',
+        'glow-coral': '0 0 16px rgba(255, 107, 53, 0.2)',
       },
       minHeight: {
         touch: '44px',
