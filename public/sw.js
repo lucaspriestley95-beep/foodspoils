@@ -1,11 +1,13 @@
-const CACHE_NAME = 'foodspoils-cache-v1';
+const CACHE_NAME = 'foodspoils-cache-v2';
 const ASSETS = [
   '/',
   '/index.html',
   '/favicon.svg',
   '/manifest.json',
   '/icon-192.png',
+  '/icon-192-maskable.png',
   '/icon-512.png',
+  '/icon-512-maskable.png',
   '/onboarding-illustration.png'
 ];
 
