@@ -390,7 +390,7 @@ export function HouseholdSection() {
                     {member.id === householdId && (
                       <span className="text-[8px] bg-fresh-500/20 text-fresh-400 px-1 py-0.2 rounded-full font-semibold uppercase">Owner</span>
                     )}
-                    {member.id === user.id && (
+                    {member.id === user?.id && (
                       <span className="text-[8px] bg-gray-800 text-gray-400 px-1 py-0.2 rounded-full font-semibold uppercase">You</span>
                     )}
                   </div>
@@ -400,7 +400,7 @@ export function HouseholdSection() {
 
               {/* Remove/Leave controls */}
               <div className="flex items-center">
-                {member.id === user.id ? (
+                {member.id === user?.id ? (
                   member.id !== householdId && (
                     <button
                       type="button"
@@ -411,7 +411,7 @@ export function HouseholdSection() {
                     </button>
                   )
                 ) : (
-                  user.id === householdId && (
+                  user?.id === householdId && (
                     <button
                       type="button"
                       onClick={() => handleRemoveMember(member.id)}

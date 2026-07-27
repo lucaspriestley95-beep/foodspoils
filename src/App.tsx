@@ -19,6 +19,7 @@ import {
   ReferralSection,
   ProfileCustomization,
   ShareStatsSection,
+  HouseholdSection,
   AuthScreen,
   RecipeSuggestions,
   BarcodeScanner,
@@ -65,6 +66,7 @@ export default function App() {
   // Supabase Data State
   const [cloudItems, setCloudItems] = useState<DbFoodItem[]>([]);
   const [cloudLoading, setCloudItemsLoading] = useState(false);
+  const [householdId, setHouseholdId] = useState<string | null>(null);
 
   // Premium state (Supabase profile is source of truth)
   const [isPremium, setIsPremium] = useState(false);
@@ -95,6 +97,62 @@ export default function App() {
     };
   }, [showAddForm]);
 
+  // Handle Household Invite Link Joining
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const joinHouseholdId = params.get('join') || params.get('household');
+    
+    if (joinHouseholdId) {
+      if (user) {
+        // Logged in: auto-join
+        const autoJoin = async () => {
+          try {
+            const { error } = await supabase
+              .from('user_profiles')
+              .update({ household_id: joinHouseholdId })
+              .eq('id', user.id);
+              
+            if (!error) {
+              alert('🎉 Successfully joined shared household pantry!');
+              fetchCloudData();
+            }
+          } catch (err) {
+            console.error('Error auto-joining household:', err);
+          }
+        };
+        autoJoin();
+        
+        // Clear query parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        // Not logged in: store pending invite in localStorage
+        localStorage.setItem('foodspoils_pending_household_join', joinHouseholdId);
+      }
+    } else if (user) {
+      // If logged in and has a pending invite in localStorage, join it
+      const pendingJoin = localStorage.getItem('foodspoils_pending_household_join');
+      if (pendingJoin) {
+        const autoJoinPending = async () => {
+          try {
+            const { error } = await supabase
+              .from('user_profiles')
+              .update({ household_id: pendingJoin })
+              .eq('id', user.id);
+              
+            if (!error) {
+              alert('🎉 Successfully joined shared household pantry!');
+              localStorage.removeItem('foodspoils_pending_household_join');
+              fetchCloudData();
+            }
+          } catch (err) {
+            console.error('Error auto-joining pending household:', err);
+          }
+        };
+        autoJoinPending();
+      }
+    }
+  }, [user]);
+
   // Fetch Supabase data when user is logged in
   useEffect(() => {
     if (user) {
@@ -115,14 +173,20 @@ export default function App() {
       .eq('id', user.id)
       .single();
     
+    let activeHouseholdId = null;
     if (profileData) {
       setIsPremium(profileData.is_premium);
+      activeHouseholdId = profileData.household_id;
+      setHouseholdId(activeHouseholdId);
     }
+
+    const pantryUserId = activeHouseholdId || user.id;
 
     // Fetch items
     const { data: itemsData } = await supabase
       .from('food_items')
       .select('*')
+      .eq('user_id', pantryUserId)
       .order('created_at', { ascending: false });
     
     if (itemsData) {
@@ -227,7 +291,7 @@ export default function App() {
         const { error } = await supabase
           .from('food_items')
           .insert({
-            user_id: user.id,
+            user_id: householdId || user.id,
             name: formData.name,
             category: formData.category,
             expiry_date: formData.expiryDate,
@@ -317,7 +381,7 @@ export default function App() {
     if (user) {
       const { error } = await supabase.from('food_items').insert(
         sampleItems.map(item => ({
-          user_id: user.id,
+          user_id: householdId || user.id,
           name: item.name,
           category: item.category,
           expiry_date: item.expiryDate,
@@ -341,7 +405,7 @@ export default function App() {
   const handleClearDatabase = async () => {
     if (confirm('Are you sure you want to clear your entire pantry and history? This cannot be undone.')) {
       if (user) {
-        await supabase.from('food_items').delete().eq('user_id', user.id);
+        await supabase.from('food_items').delete().eq('user_id', householdId || user.id);
         fetchCloudData();
       } else {
         await db.items.clear();
@@ -736,6 +800,8 @@ export default function App() {
           <ReferralSection />
           
           {user && <ProfileCustomization />}
+          
+          {user && <HouseholdSection />}
           
           <ShareStatsSection activeItems={activeItems} historyItems={historyItems} />
 

@@ -16,3 +16,4 @@ export { AuthScreen } from './AuthScreen';
 export { BarcodeScanner } from './BarcodeScanner';
 export { RecipeSuggestions } from './RecipeSuggestions';
 export { CategoryIcon } from './CategoryIcon';
+export { HouseholdSection } from './HouseholdSection';

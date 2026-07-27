@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
     avatar_url TEXT,
     is_premium BOOLEAN DEFAULT FALSE,
     premium_expires_at TIMESTAMP WITH TIME ZONE,
+    household_id UUID REFERENCES auth.users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
